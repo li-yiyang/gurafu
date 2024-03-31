@@ -32,7 +32,7 @@
 (defmethod real-colorspace-name! ((opticl opticl-backend))
   (setf (slot-value opticl 'real-colorspace)
         (ecase (slot-value opticl 'colorspace)
-b          ((:rgb :8-bit-rgb) :8-bit-rgb)
+          ((:rgb :8-bit-rgb) :8-bit-rgb)
           ((:gray :grayscale :grey :greyscale) :8-bit-gray))))
 
 ;; ========== rgb-color! ==========
