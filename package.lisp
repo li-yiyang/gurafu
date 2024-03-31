@@ -1,0 +1,2 @@
+(defpackage :gurafu
+  (:use :cl))
