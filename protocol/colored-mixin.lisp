@@ -25,9 +25,9 @@
 ;; ========== colored-mixin ==========
 
 (defclass colored-mixin ()
-  ((colorspace :initform :8-bit-rgb
-               :initarg :colorspace
-               :reader colorspace))
+  ((%colorspace :initform :8-bit-rgb
+                :initarg :colorspace
+                :reader colorspace))
   (:documentation
    "This foundamental protocol class defines the color methods.
 It should perform as a translation between different device

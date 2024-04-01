@@ -21,8 +21,8 @@
 
 (defclass opticl-backend (output-protocol
                           bdf-font-mixin)
-  ((opticl-image    :initform nil)
-   (opticl-colorspace :initform nil))
+  ((%opticl-image      :initform nil)
+   (%opticl-colorspace :initform nil))
   (:documentation
    "GURAFU backend using opticl to render plot."))
 
@@ -30,7 +30,7 @@
 ;; This would UPDATE `opticl-colorspace' for opticl-backend
 
 (defmethod real-colorspace-name! ((opticl opticl-backend))
-  (slot-value opticl 'opticl-colorspace))
+  (slot-value opticl '%opticl-colorspace))
 
 ;; ========== rgb-color! ==========
 ;; The returned value is values for each color vector.
@@ -52,13 +52,13 @@
 ;; ========== inititalize-instance ==========
 
 (defmethod initialize-instance :after ((opticl opticl-backend) &key)
-  (with-slots (opticl-colorspace opticl-image) opticl
-    (setf opticl-colorspace
+  (with-slots (%opticl-colorspace %opticl-image) opticl
+    (setf %opticl-colorspace
           (ecase (slot-value opticl 'colorspace)
             ((:rgb :8-bit-rgb) :8-bit-rgb)
             ((:gray :grayscale :grey :greyscale) :8-bit-gray)))
-    (setf opticl-image
-          (ecase (real-colorspace-name! opticl)
+    (setf %opticl-image
+          (ecase %opticl-colorspace
             (:8-bit-rgb
              (make-8-bit-rgb-image
               (stream-height! opticl)
@@ -76,8 +76,8 @@
 ;; ========== set-stream-height! ==========
 
 (flet ((opticl-resize (opticl)
-         (setf (slot-value opticl 'opticl-image)
-               (resize-image opticl-image
+         (setf (slot-value opticl '%opticl-image)
+               (resize-image %opticl-image
                              (stream-height! opticl)
                              (stream-width!  opticl)))))
   (defmethod (setf stream-width!) :after (width (opticl opticl-backend))
@@ -97,10 +97,10 @@
   (let ((format (if format-set? format
                     (make-keyword
                      (format nil "~:@(~a~)" (pathname-type path))))))
-    (with-slots (opticl-image) opticl
+    (with-slots (%opticl-image) opticl
       (case format
-        (:png         (write-png-file  path opticl-image))
-        ((:jpg :jpeg) (write-jpeg-file path opticl-image))
+        (:png         (write-png-file  path %opticl-image))
+        ((:jpg :jpeg) (write-jpeg-file path %opticl-image))
         (otherwise
          (error
           (format nil "Format ~a is not supported yet." format)))))))

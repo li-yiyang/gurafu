@@ -2,6 +2,7 @@
   (:use :cl)
   (:export
    ;; base-protocol
+   #:base-protocol
    #:stream-width!
    #:stream-height!
 
