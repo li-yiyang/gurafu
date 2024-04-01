@@ -17,9 +17,8 @@ follow the behavior defined in `gurafu/protocol'. "
   :serial t
   :components ((:file "protocol")
                (:file "protocol-macro")
+               (:file "base-protocol")
                (:file "colored-mixin")
-               (:file "coordinated-mixin")
-               (:file "margined-mixin")
                (:file "output-protocol")))
 
 (defsystem #:gurafu/backends/opticl

@@ -7,6 +7,6 @@
    #:+opticl-support-format+
    #:opticl-backend)
   (:documentation
-   ""))
+   "This is GURAFU backend using opticl. "))
 
 (in-package :gurafu/backends/opticl)

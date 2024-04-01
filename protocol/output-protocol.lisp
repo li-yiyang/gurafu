@@ -3,7 +3,7 @@
 ;; ========== output-protocol ==========
 
 (defclass output-protocol (colored-mixin
-                           margined-mixin)
+                           base-protocol)
   ()
   (:documentation
    "The foundamental protocol class difines the output methods.
@@ -25,14 +25,6 @@ It should provide a low level interface to each output media.
 (defmethod output-p? ((stream output-protocol))
   (declare (ignore stream))
   t)
-
-;; ========== init-output! ==========
-(defrequired init-output! (stream)
-  (:documentation
-   "Init the output `stream'. "))
-
-(defmethod initialize-instance :after ((stream output-protocol) &key)
-  (init-output! stream))
 
 ;; ========== output! ==========
 

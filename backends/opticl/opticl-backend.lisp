@@ -22,18 +22,15 @@
 (defclass opticl-backend (output-protocol
                           bdf-font-mixin)
   ((opticl-image    :initform nil)
-   (real-colorspace :initform nil :reader real-colorspace))
+   (opticl-colorspace :initform nil))
   (:documentation
    "GURAFU backend using opticl to render plot."))
 
 ;; ========== real-colorspace! ==========
-;; This would UPDATE `real-colorspace' for opticl-backend
+;; This would UPDATE `opticl-colorspace' for opticl-backend
 
 (defmethod real-colorspace-name! ((opticl opticl-backend))
-  (setf (slot-value opticl 'real-colorspace)
-        (ecase (slot-value opticl 'colorspace)
-          ((:rgb :8-bit-rgb) :8-bit-rgb)
-          ((:gray :grayscale :grey :greyscale) :8-bit-gray))))
+  (slot-value opticl 'opticl-colorspace))
 
 ;; ========== rgb-color! ==========
 ;; The returned value is values for each color vector.
@@ -48,55 +45,49 @@
              (list
               (trun (apply #'+ (mapcar #'* rgb-color
                                        +ntsc-rgb-gray-weights+))))))
-      (case (real-colorspace opticl)
+      (case (real-colorspace-name! opticl)
         (:8-bit-rgb  (->8-bit-rgb))
         (:8-bit-gray (->8-bit-gray))))))
 
 ;; ========== inititalize-instance ==========
 
 (defmethod initialize-instance :after ((opticl opticl-backend) &key)
-  ;; Update `real-colorspace'.
-  (real-colorspace-name! opticl))
-
-;; ========== init-output! ==========
-;; This would update `opticl-image' for opticl-backend
-
-(defmethod init-output! ((opticl opticl-backend))
-  (setf (slot-value opticl 'opticl-image)
-        (ecase (real-colorspace-name! opticl)
-          (:8-bit-rgb
-           (make-8-bit-rgb-image (stream-height! opticl)
-                                 (stream-width!  opticl)))
-          (:8-bit-gray
-           (make-8-bit-gray-image (stream-height! opticl)
-                                  (stream-width!  opticl)))))
-  (draw-rect! opticl
-              0 0 (stream-width! opticl) (stream-height! opticl)
-              :pen-width 0
-              :fill t
-              :fill-color *background-color*))
-
-;; ========== set-stream-inner-width! ==========
-
-(defmethod set-stream-inner-width! :after
-    ((opticl opticl-backend) width &optional left)
-  (declare (ignore left))
-  (with-slots (opticl-image) opticl
+  (with-slots (opticl-colorspace opticl-image) opticl
+    (setf opticl-colorspace
+          (ecase (slot-value opticl 'colorspace)
+            ((:rgb :8-bit-rgb) :8-bit-rgb)
+            ((:gray :grayscale :grey :greyscale) :8-bit-gray)))
     (setf opticl-image
-          (resize-image opticl-image
-                        (stream-height! opticl)
-                        (stream-width!  opticl)))))
+          (ecase (real-colorspace-name! opticl)
+            (:8-bit-rgb
+             (make-8-bit-rgb-image
+              (stream-height! opticl)
+              (stream-width!  opticl)
+              :initial-element
+              (values-list (rgb-color! opticl *background-color*))))
+            (:8-bit-gray
+             (make-8-bit-gray-image
+              (stream-height! opticl)
+              (stream-width!  opticl)
+              :initial-element
+              (values-list (rgb-color! opticl *background-color*))))))))
 
-;; ========== set-stream-inner-height! ==========
+;; ========== set-stream-width! ==========
+;; ========== set-stream-height! ==========
 
-(defmethod set-stream-inner-height! :after
-    ((opticl opticl-backend) height &optional top)
-  (declare (ignore top))
-  (with-slots (opticl-image) opticl
-    (setf opticl-image
-          (resize-image opticl-image
-                        (stream-height! opticl)
-                        (stream-width!  opticl)))))
+(flet ((opticl-resize (opticl)
+         (setf (slot-value opticl 'opticl-image)
+               (resize-image opticl-image
+                             (stream-height! opticl)
+                             (stream-width!  opticl)))))
+  (defmethod (setf stream-width!) :after (width (opticl opticl-backend))
+    (declare (ignore width))
+    (opticl-resize opticl))
+  
+  (defmethod (setf stream-height!) :after (height (opticl opticl-backend))
+    (declare (ignore height))
+    (opticl-resize opticl)))
+
 
 ;; ========== output! ==========
 
