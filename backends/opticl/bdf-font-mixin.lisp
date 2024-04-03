@@ -1,18 +1,20 @@
 (in-package :gurafu/backends/opticl)
 
-(let ((font-table (make-hash-table)))
-  ;; Load fonts from fonts directory
-  (loop for path in (uiop:directory-files
-                     (asdf:system-relative-pathname
-                      :gurafu
-                      "backends/opticl/fonts/"))
-        ;; Ensure load BDF Fonts only
-        if (string= (pathname-type path) "bdf")
-          do (let ((font (make-keyword (string-upcase (pathname-name path)))))
-               (setf (gethash font font-table)
-                     (load-bdf-font path))))
-  (defparameter *opticl-bdf-fonts* font-table
-    "Opticl BDF fonts database. "))
+(time
+ (let ((font-table (make-hash-table)))
+   ;; Load fonts from fonts directory
+   (loop for path in (uiop:directory-files
+                      (asdf:system-relative-pathname
+                       :gurafu
+                       "backends/opticl/fonts/"))
+         ;; Ensure load BDF Fonts only
+         if (string= (pathname-type path) "bdf")
+           do (let ((font (make-keyword (string-upcase (pathname-name path)))))
+                (setf (gethash font font-table)
+                      (load-bdf-font path))))
+   
+   (defparameter *opticl-bdf-fonts* font-table
+     "Opticl BDF fonts database. ")))
 
 (defclass bdf-font-mixin ()
   ()

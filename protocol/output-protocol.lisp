@@ -34,6 +34,12 @@ It should provide a low level interface to each output media.
 The `media' could be a:
 + output path: to render `stream' out to the corresponding file"))
 
+;; ========== draw-pixel! ==========
+
+(defrequired draw-pixel! (stream u v color)
+  (:documentation
+   "Set pixel on `stream'. "))
+
 ;; ========== draw-point! ==========
 
 (defrequired draw-point! (stream
@@ -41,7 +47,8 @@ The `media' could be a:
                           &key color pen-width
                           &allow-other-keys)
   (:documentation
-   "Draw point on `stream' by absolute position. "))
+   "Draw point on `stream' by absolute position.
+Return values are uv bounding box left, right, bottom and top. "))
 
 ;; ========== draw-line! ==========
 
@@ -50,7 +57,8 @@ The `media' could be a:
                          &key color pen-width
                          &allow-other-keys)
   (:documentation
-   "Draw line on `stream' by absolute position. "))
+   "Draw line on `stream' by absolute position.
+Return values are uv bounding box left, right, bottom and top. "))
 
 ;; ========== draw-rect! ==========
 
@@ -61,7 +69,8 @@ The `media' could be a:
                          &allow-other-keys)
   (:documentation
    "Draw rectangle on `stream' by absolute position.
-Default filling (`fill?') with `fill-color'. "))
+Default filling (`fill?') with `fill-color'.
+Return values are uv bounding box left, right, bottom and top. "))
 
 ;; ========== draw-tringle! ==========
 
@@ -72,7 +81,8 @@ Default filling (`fill?') with `fill-color'. "))
                             &allow-other-keys)
   (:documentation
    "Draw tringle on `stream' by absolute position.
-Default filling (`fill?') with `fill-color'. "))
+Default filling (`fill?') with `fill-color'.
+Return values are uv bounding box left, right, bottom and top. "))
 
 ;; ========== draw-circle! ==========
 
@@ -83,7 +93,8 @@ Default filling (`fill?') with `fill-color'. "))
                            &allow-other-keys)
   (:documentation
    "Draw circle on `stream' by absolute position and radius.
-Default filling (`fill?') with `fill-color'. "))
+Default filling (`fill?') with `fill-color'.
+Return values are uv bounding box left, right, bottom and top. "))
 
 ;; ========== draw-text! ==========
 
@@ -93,4 +104,5 @@ Default filling (`fill?') with `fill-color'. "))
                          font-family font-style
                          rotation &allow-other-keys)
   (:documentation
-   "Draw `text' on `stream' by absolute position. "))
+   "Draw `text' on `stream' by absolute position.
+Return values are bounding uv box left, right, bottom and top coordinates. "))
