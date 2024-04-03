@@ -36,10 +36,10 @@ color settings.
 
 (defmethod initialize-instance :after ((stream colored-mixin) &key)
   ;; Ensure the colorspace is within defination
-  (with-slots (colorspace) stream
-    (unless (or (find colorspace +colorful-colorspace+)
-                (find colorspace +grayful-colorspace+))
-      (error (format nil "Undefined colorspace: ~a" colorspace)))))
+  (with-slots (%colorspace) stream
+    (unless (or (find %colorspace +colorful-colorspace+)
+                (find %colorspace +grayful-colorspace+))
+      (error (format nil "Undefined colorspace: ~a" %colorspace)))))
 
 ;; ========== colorful? ==========
 

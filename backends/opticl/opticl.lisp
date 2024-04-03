@@ -4,7 +4,7 @@
    :alexandria
    :make-keyword)
   (:export
-   #:+opticl-support-format+
+   #:+opticl-support-format+   
    #:opticl-backend)
   (:documentation
    "This is GURAFU backend using opticl. "))

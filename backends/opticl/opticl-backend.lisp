@@ -54,7 +54,7 @@
 (defmethod initialize-instance :after ((opticl opticl-backend) &key)
   (with-slots (%opticl-colorspace %opticl-image) opticl
     (setf %opticl-colorspace
-          (ecase (slot-value opticl 'colorspace)
+          (ecase (colorspace opticl)
             ((:rgb :8-bit-rgb) :8-bit-rgb)
             ((:gray :grayscale :grey :greyscale) :8-bit-gray)))
     (setf %opticl-image
@@ -119,8 +119,8 @@
                           (color +black+)
                           (pen-width 1)
                         &allow-other-keys)
-  (with-slots (opticl-image) opticl
-    (apply #'fill-circle opticl-image v u pen-width
+  (with-slots (%opticl-image) opticl
+    (apply #'fill-circle %opticl-image v u pen-width
            (rgb-color! opticl color))))
 
 ;; ========== draw-line! ==========
@@ -131,15 +131,15 @@
                          (pen-width 1)
                        &allow-other-keys)
   ;; No pen-width yet
-  (with-slots (opticl-image) opticl
+  (with-slots (%opticl-image) opticl
     (let ((color (rgb-color! opticl color)))
       ;; poor man's `pen-width', need rewrite in future
       (dotimes (offset (truncate pen-width 2))
-        (apply #'draw-line opticl-image
+        (apply #'draw-line %opticl-image
                (+ v1 offset) u1 (+ v2 offset) u2 color)
-        (apply #'draw-line opticl-image
+        (apply #'draw-line %opticl-image
                (- v1 offset) u1 (- v2 offset) u2 color))
-      (apply #'draw-line opticl-image v1 u1 v2 u2 color))))
+      (apply #'draw-line %opticl-image v1 u1 v2 u2 color))))
 
 ;; ========== draw-circle! ==========
 
@@ -149,12 +149,12 @@
                            (pen-width 1)
                            (fill? t)
                            (fill-color color))
-  (with-slots (opticl-image) opticl
+  (with-slots (%opticl-image) opticl
     (let ((color (rgb-color! opticl color)))
       (dotimes (i pen-width)
-        (apply #'draw-circle opticl-image v u (+ uv-r i) color)))
+        (apply #'draw-circle %opticl-image v u (+ uv-r i) color)))
     (when fill?
-      (apply #'fill-circle opticl-image v u uv-r
+      (apply #'fill-circle %opticl-image v u uv-r
              (rgb-color! opticl fill-color)))))
 
 ;; ========== draw-rect! ==========
@@ -165,16 +165,16 @@
                          (fill? t)
                          (fill-color color)
                        &allow-other-keys)
-  (with-slots (opticl-image) opticl
+  (with-slots (%opticl-image) opticl
     (let ((color (rgb-color! opticl color)))
       (dotimes (i pen-width)
         (apply #'draw-rectangle
-               opticl-image
+               %opticl-image
                (- v1 i) (- u1 i) (+ v2 i) (+ u2 i)
                color)))
     (when fill?
       (apply #'fill-rectangle
-             opticl-image
+             %opticl-image
              v1 u1 v2 u2
              (rgb-color! opticl fill-color)))))
 
@@ -212,7 +212,7 @@ Return value are shifted position for char. "))
     (when char
       (multiple-value-bind (bbw bbh bbx bby)
           (font-bounding-box char)
-        (loop with img = (slot-value opticl 'opticl-image)
+        (loop with img = (slot-value opticl '%opticl-image)
               with color = (rgb-color! opticl +black+)
               for bit-row in (font-bitmap char)
               for row below bbh

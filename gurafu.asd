@@ -21,6 +21,21 @@ follow the behavior defined in `gurafu/protocol'. "
                (:file "colored-mixin")
                (:file "output-protocol")))
 
+(defsystem #:gurafu/core
+  :author ("凉凉")
+  :version "0"
+  :description "This is the core GURAFU package. "
+  :depends-on (:alexandria
+               :gurafu/protocol
+               :gurafu/backends/opticl)
+  :pathname "core"
+  :serial t
+  :components ((:file "core")
+               (:file "coordinated-mixin")
+               (:file "margined-mixin")
+               (:file "base-presentation")
+               (:file "layout-presentation")))
+
 (defsystem #:gurafu/backends/opticl
   :author ("凉凉")
   :version "0"
