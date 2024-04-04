@@ -18,12 +18,22 @@
                                       :colorspace ,colorspace
                                       :height ,height :width ,width)))))
 
+;; by default, the `*default-backend*' should be a small `:opticl' backend
+;; the size would be resized when using it. 
+(defparameter *default-backend*
+  (make-backend :opticl :width 1 :height 1)
+  "The default backend used for GURAFU plotting lib. ")
+
 ;; ========== base-presentation ==========
 
-(defclass base-presentation (margined-mixin)
-  ((%backend :initform nil :initarg :backend))
+(defclass base-presentation (coordinated-box)
+  ((%backend :initform *default-backend* :initarg :backend))
   (:documentation
-   "This is the base class for GURAFU presentation object. "))
+   "This is the base class for GURAFU presentation object.
+
+When initialize the `base-presentation' objects, the default `%backend'
+will be the `*default-backend*'. It could be overwritten by closure
+variables. "))
 
 (defmethod initialize-instance :after
     ((present base-presentation)
@@ -37,7 +47,10 @@
 
 ;; ========== present ==========
 
-(defgeneric present (obj &optional media)
+(defgeneric present (obj)
   (:documentation
-   "The generic function about how the `obj' is presented. "))
+   "To present the `obj' via its backend. "))
+
+(defmethod present (obj)
+  (declare (ignore obj)))
 

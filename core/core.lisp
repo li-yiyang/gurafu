@@ -5,6 +5,7 @@
    :gurafu/backends/opticl)
   (:import-from
    :alexandria
-   :maphash-values))
+   :maphash-values
+   :with-gensyms))
 
 (in-package :gurafu/core)

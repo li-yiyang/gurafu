@@ -1,6 +1,11 @@
 (in-package :gurafu/core)
 
-(defclass margined-mixin (coordinated-mixin)
+;; ========== margined-mixin ==========
+;; The `margined-mixin' should work on `coordinated-box'
+;; object, which provide the margined feature for
+;; coordinate-box.
+
+(defclass margined-mixin ()
   ((%margin-left   :initform 0)
    (%margin-right  :initform 0)
    (%margin-bottom :initform 0)
@@ -24,9 +29,9 @@
 
 (defmethod initialize-instance :after
     ((stream margined-mixin) &key (margin 0))
-  (cond ((numberp margin)
+  (cond ((numberp margin)               ; evenly distributed margin 
          (set-stream-margins stream margin margin margin margin))
-        ((listp margin)
+        ((listp margin)                 ; margin by specify four edges
          (set-stream-margins stream
                              (or (first  margin) 0)
                              (or (second margin) 0)

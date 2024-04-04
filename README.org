@@ -1,0 +1,27 @@
+#+title: GURAFU
+* About
+GURAFU (グラフ) is a plotting lib for Common Lisp.
+(though it's still work in progress...)
+
+GURAFU learnt a lot from CLIM (McCLIM) and SCIGRAPH,
+though, I hop GURAFU would not be too complex.
+
+* Work in Progress
+Here are some little developing memos about GURAFU:
+
++ GURAFU should be device independent. It should
+  support different backends.
+
+  Although currently backend output only =opticl= is done...
++ =opticl= backend use BDF font (UNIFONT) for =draw-char!=
+
+** Naming Conventions
++ GURAFU class slot variables should be prefixed with =%=,
+  for example =%backend=, =%width=, =%height=;
++ GURAFU low-level operation methods should be postfixed
+  with =!=, for example =draw-text!=, =draw-line!=;
++ GURAFU constants should be wrapped with =+=, for example
+  =+white+=, =+black+=;
++ GURAFU global variables should be wrapped with =*=, for
+  example =*foreground-color*=, =*background-color*=;
+  

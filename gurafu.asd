@@ -31,10 +31,11 @@ follow the behavior defined in `gurafu/protocol'. "
   :pathname "core"
   :serial t
   :components ((:file "core")
-               (:file "coordinated-mixin")
+               (:file "coordinated-box")
                (:file "margined-mixin")
                (:file "base-presentation")
-               (:file "layout-presentation")))
+               (:file "layout-presentation")
+               (:file "define-presentation")))
 
 (defsystem #:gurafu/backends/opticl
   :author ("凉凉")
