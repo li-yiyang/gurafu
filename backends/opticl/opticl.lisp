@@ -3,6 +3,9 @@
   (:import-from
    :alexandria
    :make-keyword)
+  (:import-from
+   :str
+   :s-nth)
   (:export
    #:+opticl-support-format+   
    #:opticl-backend)

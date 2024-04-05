@@ -44,27 +44,30 @@ The `media' could be a:
 
 (defrequired draw-point! (stream
                           u v
-                          &key color pen-width
+                          &key color pen-width point-style
                           &allow-other-keys)
   (:documentation
    "Draw point on `stream' by absolute position.
+
 Return values are uv bounding box left, right, bottom and top. "))
 
 ;; ========== draw-line! ==========
 
 (defrequired draw-line! (stream
                          u1 v1 u2 v2
-                         &key color pen-width
+                         &key color pen-width line-style
                          &allow-other-keys)
   (:documentation
    "Draw line on `stream' by absolute position.
-Return values are uv bounding box left, right, bottom and top. "))
+Return values are uv bounding box left, right, bottom and top.
+
+The `line-style' could be `:solid', `:dashed', `:dash-dot'... "))
 
 ;; ========== draw-rect! ==========
 
 (defrequired draw-rect! (stream
                          u1 v1 u2 v2
-                         &key color pen-width
+                         &key color pen-width line-style
                          (fill? t) fill-color
                          &allow-other-keys)
   (:documentation
@@ -76,7 +79,7 @@ Return values are uv bounding box left, right, bottom and top. "))
 
 (defrequired draw-tringle! (stream
                             u1 v1 u2 v2 u3 v3
-                            &key color pen-width
+                            &key color pen-width line-style
                             (fill? t) fill-color
                             &allow-other-keys)
   (:documentation
@@ -88,7 +91,7 @@ Return values are uv bounding box left, right, bottom and top. "))
 
 (defrequired draw-circle! (stream
                            u v uv-r
-                           &key color pen-width
+                           &key color pen-width line-style
                            (fill? t) fill-color
                            &allow-other-keys)
   (:documentation
@@ -100,9 +103,11 @@ Return values are uv bounding box left, right, bottom and top. "))
 
 (defrequired darw-text! (stream
                          u v text
-                         &key color font-size font-align
-                         font-family font-style
-                         rotation &allow-other-keys)
+                         &key color text-path text-align
+                         line-width line-spacing
+                         char-spacing
+                         font-size font-name
+                         &allow-other-keys)
   (:documentation
    "Draw `text' on `stream' by absolute position.
 Return values are bounding uv box left, right, bottom and top coordinates. "))

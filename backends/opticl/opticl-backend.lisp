@@ -175,39 +175,77 @@ if fails to find, return `*opticl-default-font*'. "
                         &key
                           (color +black+)
                           (pen-width 1)
+                          (point-style :dot)
                         &allow-other-keys)
-  (with-slots (%opticl-image) opticl
-    (let ((r (ceiling pen-width 2)))
-      (apply #'fill-circle %opticl-image v u r (rgb-color! opticl color))
-      (values (- u r) (+ u r) (+ v r) (- v r)))))
+  (let ((img   (slot-value opticl '%opticl-image))
+        (size  (ceiling pen-width 2))
+        (color (rgb-color! opticl color)))
+    (ecase point-style
+      ((:dot :point)
+       (apply #'fill-circle
+              img v u size color))
+      ((:plus :+)
+       (apply #'draw-line
+              img (- v size) u (+ v size) u color)
+       (apply #'draw-line
+              img v (- u size) v (+ v size) color))
+      ((:cross :times :x)
+       (apply #'draw-line
+              img (- v size) (- u size) (+ v size) (+ u size) color)
+       (apply #'draw-line
+              img (+ v size) (- u size) (- v size) (+ u size) color))
+      ((:box :rect :square)
+       (apply #'draw-rectangle
+              img (- v size) (- u size) (+ v size) (- u size) color))
+      ((:circle :O)
+       (apply #'draw-circle
+              img v u size color))
+      ((:triangle)
+       (apply #'draw-triangle
+              img (- v size) u
+              (+ v size) (+ u size) (+ v size) (- u size)
+              color)))
+    ;; return the binding box coordinates
+    (values (- u size) (+ u size) (+ v size) (- v size))))
 
 ;; ========== draw-line! ==========
 
 (defmethod draw-line! ((opticl opticl-backend) u1 v1 u2 v2
-                       &key
-                         (color +black+)
-                         (pen-width 1)
+                       &key (color +black+)
+                       ;; (line-style :solid) not implemented
+                         (pen-width 1 pen-width-set?)
                        &allow-other-keys)
-  ;; No pen-width yet
-  (with-slots (%opticl-image) opticl
-    (let ((color (rgb-color! opticl color))
-          (half-w (truncate pen-width 2)))
-      ;; poor man's `pen-width', need rewrite in future
-      (dotimes (offset half-w)
-        (apply #'draw-line %opticl-image
-               (+ v1 offset) u1 (+ v2 offset) u2 color)
-        (apply #'draw-line %opticl-image
-               (- v1 offset) u1 (- v2 offset) u2 color))
-      (apply #'draw-line %opticl-image v1 u1 v2 u2 color)
-      (values (min u1 u2) (max u1 u2)
-              (- (min v1 v2) hafl-w) (+ (max v1 v2) half-w)))))
+  (let ((img   (slot-value opticl '%opticl-image))
+        (color (rgb-color! opticl color)))
+    ;; draw the line
+    (apply #'draw-line img v1 u1 v2 u2 color)
+
+    ;; if set pen-width
+    ;; poor man's `pen-width' implementation
+    (when pen-width-set?
+      (let ((half-w (truncate pen-width 2)))
+        (if (> (abs (- u2 u1)) (abs (- v2 v1)))
+            (dotimes (offset (truncate pen-width 2))
+              (apply #'draw-line
+                     img (+ v1 offset 1) u1 (+ v2 offset 1) u2 color)
+              (apply #'draw-line
+                     img (- v1 offset 1) u1 (- v2 offset 1) u2 color))
+            (dotimes (offset (truncate pen-width 2))
+              (apply #'draw-line
+                     img v1 (+ u1 offset 1) v2 (+ u2 offset 1) color)
+              (apply #'draw-line
+                     img v1 (- u1 offset 1) v2 (- u2 offset 1) color)))))
+
+    ;; return the bounding box
+    (values (min u1 u2) (max u1 u2)
+            (min v1 v2) (max v1 v2))))
 
 ;; ========== draw-circle! ==========
 
 (defmethod draw-circle! ((opticl opticl-backend) u v uv-r
-                         &key
-                           (color +black+)
+                         &key (color +black+)
                            (pen-width 1)
+                         ;; (line-style :solid) not implemented
                            (fill? t)
                            (fill-color color)
                          &allow-other-keys)
@@ -228,26 +266,147 @@ if fails to find, return `*opticl-default-font*'. "
 (defmethod draw-rect! ((opticl opticl-backend) u1 v1 u2 v2
                        &key (color *foreground-color*)
                          (pen-width 1)
+                         (line-style :solid)
                          (fill? t)
                          (fill-color color)
                        &allow-other-keys)
-  (with-slots (%opticl-image) opticl
-    (let ((color (rgb-color! opticl color))
-          (pen-w (- pen-width 1)))
-      (dotimes (i pen-width)
-        (apply #'draw-rectangle %opticl-image
-               (- v1 i) (- u1 i) (+ v2 i) (+ u2 i) color))
-      (when fill?
-        (apply #'fill-rectangle %opticl-image
-               v1 u1 v2 u2 (rgb-color! opticl fill-color)))
-      (values (- u1 pen-w) (+ u2 pen-w) (+ v2 pen-w) (- v1 pen-w)))))
+  (let ((pen-w (truncate pen-width 2)))
+
+    ;; fill the rectangle
+    (when fill?
+      (apply #'fill-rectangle (slot-value opticl '%opticl-image)
+             v1 u1 v2 u2 (rgb-color! opticl fill-color)))
+
+    ;; draw boundary
+    (draw-line! opticl u1 v1 u1 v2
+                :line-style line-style
+                :pen-width pen-width
+                :color color)
+    (draw-line! opticl u2 v1 u2 v2
+                :line-style line-style
+                :pen-width pen-width
+                :color color)
+    (draw-line! opticl u1 v1 u2 v1
+                :line-style line-style
+                :pen-width pen-width
+                :color color)
+    (draw-line! opticl u1 v2 u2 v2
+                :line-style line-style
+                :pen-width pen-width
+                :color color)
+
+    ;; return bounding rectangle
+    (values (- u1 pen-w) (+ u2 pen-w) (+ v2 pen-w) (- v1 pen-w))))
+
+;; ========== draw-triangle! ==========
+
+(defmethod draw-triangle! ((opticl opticl-backend) u1 v1 u2 v2 u3 v3
+                           &key (color *foreground-color*)
+                             (pen-width 1)
+                             (line-style :solid)
+                             ;; (fill? t) not implemented
+                             ;; (fill-color color)
+                           &allow-other-keys)
+
+  ;; draw triangle
+  (draw-line! opticl u1 v1 u2 v2
+              :line-style line-style
+              :pen-width pen-width
+              :color color)
+  (draw-line! opticl u1 v1 u3 v3
+              :line-style line-style
+              :pen-width pen-width
+              :color color)
+  (draw-line! opticl u2 v2 u3 v3
+              :line-style line-style
+              :pen-width pen-width
+              :color color)
+
+  ;; return bounding box
+  (values (min u1 u2 u3) (max u1 u2 u3)
+          (min v1 v2 v3) (max v1 v2 v3)))
 
 ;; ========== draw-char ==========
 ;; This is an extension for opticl image to
 ;; draw character on image.
 
+(declaim (inline char-size))
+(defun char-width (char scale)
+  "Get the width of `char' when drawing with `scale'.
+Return values are bounding box of char width. "
+  (values (truncate (* scale (font-size char)))))
+
+(defun text-size (char-list font font-size char-forward 
+                  &optional (line-width 0 line-width-set?)
+                    (line-forward '(0 1.5)))
+  "Calculate the size of `text' when drawing with `scale'.
+
+The `font' is a `bdf' object standing for drawing font;
+The `font-size' is the height of the drawing char;
+The `line-forward' is a vector length for char spacing,
+  forwarding to next char;
+The `line-forward' is a vector length for line spacing,
+  forwarding to next line (must provide if set `line-width')
+
+Return values are bounding box of text width and height. 
+
+You could feed in `line-width' to limit the max width of a text line,
+if not given `line-width', default assuming infinite long line. "
+  (loop with scale = (font-scale font font-size)
+
+        ;; left, right, bottom, top is the bounding box size
+        with left = 0 with right = 0
+        with bottom = 0 with top = 0
+
+        ;; u, v is the char cursor position
+        with u = 0 with v = 0
+
+        ;; line-u, line-v is the line start position
+        with line-u = 0 with line-v = 0
+
+        ;; forward-u and forward-v is the char moving scale vector
+        with forward-u = (first char-forward)
+        with forward-v = (second char-forward)
+
+        ;; forline-u, forline-v is the line return moving vector
+        with forline-u = (truncate (* font-size
+                                      (or (first  line-forward) 0)))
+        with forline-v = (truncate (* font-size
+                                      (or (second line-forward) 0)))
+
+        for c in char-list
+        for char  = (get-char font
+                              (format nil "U+~4,'0X" (char-code c)))
+        for width = (char-width char scale)
+
+        ;; update bounding box
+        do (setf left   (min left   u)
+                 right  (max right  (+ u width))
+                 bottom (max bottom (+ v font-size))
+                 top    (min top    v))
+
+        ;; move cursor to next char position
+        do (incf u (truncate (* width forward-u)))
+        do (incf v (truncate (* width forward-v)))
+
+        ;; move to next line if overflow line-width
+        if (and line-width-set?
+                (> u line-width))
+          do (setf line-u (+ line-u forline-u)
+                   line-v (+ line-v forline-v))
+          and do (setf u line-u
+                       v line-v)
+
+        ;; return the bounding box size
+        finally (return (values (abs (- right left))
+                                (abs (- bottom top))))))
+
+(text-size (map 'list #'identity "This is how I work")
+           *opticl-default-font*
+           16 '(1 0) 100)
+
 (defun draw-char (image u v char scale color
-                   &optional (font *opticl-default-font*))
+                  &optional (font *opticl-default-font*))
   "Draw a char on image at position `u' and `v'.
 
 The `char' is a `char' object, for example `#\A', `#\B' and so on.
@@ -293,6 +452,7 @@ To draw a char:
 
 ;; ========== draw-text! ==========
 
+;; TODO: update draw-text!
 (defmethod draw-text! ((opticl opticl-backend) u v text
                        &key (color *foreground-color*)
                          (font-size 12)
@@ -316,10 +476,10 @@ To draw a char:
              (draw-char image char-u char-v char
                         scale color font))
 
-        ;; move to next line if char origin outside `max-text-width'
+           ;; move to next line if char origin outside `max-text-width'
         if (and max-text-width-set?
                 (> (- char-u u) max-text-width))
           do (setf char-u u
                    char-v (+ char-v (* font-size line-spacing)))
 
-        do ))
+        ))
