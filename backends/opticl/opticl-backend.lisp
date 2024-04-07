@@ -182,28 +182,37 @@ if fails to find, return `*opticl-default-font*'. "
         (color (rgb-color! opticl color)))
     (ecase point-style
       ((:dot :point)
-       (apply #'fill-circle
-              img v u size color))
+       (apply #'fill-circle img v u size color))
       ((:plus :+)
-       (apply #'draw-line
-              img (- v size) u (+ v size) u color)
-       (apply #'draw-line
-              img v (- u size) v (+ v size) color))
+       (apply #'draw-line img
+              (- v size) u
+              (+ v size) u
+              color)
+       (apply #'draw-line img
+              v (- u size)
+              v (+ u size)
+              color))
       ((:cross :times :x)
-       (apply #'draw-line
-              img (- v size) (- u size) (+ v size) (+ u size) color)
-       (apply #'draw-line
-              img (+ v size) (- u size) (- v size) (+ u size) color))
+       (apply #'draw-line img
+              (- v size) (- u size)
+              (+ v size) (+ u size)
+              color)
+       (apply #'draw-line img
+              (+ v size) (- u size)
+              (- v size) (+ u size)
+              color))
       ((:box :rect :square)
-       (apply #'draw-rectangle
-              img (- v size) (- u size) (+ v size) (- u size) color))
+       (apply #'draw-rectangle img
+              (- v size) (- u size)
+              (+ v size) (+ u size)
+              color))
       ((:circle :O)
-       (apply #'draw-circle
-              img v u size color))
+       (apply #'draw-circle img v u size color))
       ((:triangle)
-       (apply #'draw-triangle
-              img (- v size) u
-              (+ v size) (+ u size) (+ v size) (- u size)
+       (apply #'draw-triangle img
+              (- v size) u
+              (+ v size) (+ u size)
+              (+ v size) (- u size)
               color)))
     ;; return the binding box coordinates
     (values (- u size) (+ u size) (+ v size) (- v size))))

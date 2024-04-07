@@ -6,6 +6,45 @@ GURAFU (グラフ) is a plotting lib for Common Lisp.
 GURAFU learnt a lot from CLIM (McCLIM) and SCIGRAPH,
 though, I hop GURAFU would not be too complex.
 
+* How to Use
+Right now it's quite mass... though you could load
+=gurafu/core= and then switch into =gurafu/core= package,
+and try the following code:
+
+#+begin_src lisp
+  (define-presentation labeled-point ()
+    ((label :initform "" :initarg :label)
+     (style :initform :dot :initarg :point-style))
+    (:draw
+     (%uv-left %uv-top style label)
+     (draw-point self 0 0 :point-style style :pen-width 5)
+     (draw-text  self 0 16 label :font-size 16 :text-align :center)))
+
+  (defun present-labled-point (label x y style)
+    (present (make-instance 'labeled-point
+                            :label label :left x :top y
+                            :point-style style)))
+
+  (let* ((*default-backend* (make-backend :opticl :width 200 :height 200))
+         (patterns '(("DOT" :dot)
+                     ("CIRCLE" :circle)
+                     ("PLUS" :plus)
+                     ("BOX"  :box)
+                     ("CROSS" :cross)
+                     ("TRIANGLE" :triangle))))
+    (loop for col below 2 do
+      (loop for row below 3 do
+        (destructuring-bind (label style)
+            (pop patterns)
+          (present-labled-point
+           label (* 60 (1+ col)) (* 50 (1+ row)) style))))
+    (output! *default-backend* "/path/to/demo-img/first-usable-demo.png"))
+#+end_src
+
+You could see the result as below:
+
+[[./demo-img/first-usable-demo.png]]
+
 * Work in Progress
 Here are some little developing memos about GURAFU:
 

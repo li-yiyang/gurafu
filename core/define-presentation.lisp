@@ -19,7 +19,7 @@
   (let ((draw (cdr (assoc :draw options))))
     (when draw
       (destructuring-bind (slot-vars . codes) draw
-        (with-gensyms (present)
+        (let ((present (intern "SELF")))
           `(defmethod present :after ((,present ,class))
              (with-slots ,slot-vars ,present
                ,@codes)))))))
@@ -94,7 +94,7 @@ The `options' could have both:
   (:layout ...)             truned into components let code body
 
 Or the `options' should not have them all. "
-  (let ((components (cdr (assoc :components options)))
+  (let ((components (rest (assoc :components options)))
         (layout     (rest (assoc :layout options))))
     (cond ((and components (not layout))
            (error "Providing components but missing layout. "))
@@ -105,7 +105,7 @@ Or the `options' should not have them all. "
               `(defmethod initialize-instance :after
                    ((,present ,class) &key)
                  (with-slots ,(first components) ,present
-                   (let ,(generate-component-init-code (rest components))
+                   (let ,(generate-component-init (rest components))
                      ,@(generate-layout-bind present layout)))))))))
 
 ;; ========== define-presentation ==========
@@ -116,6 +116,8 @@ Or the `options' should not have them all. "
   (define-presentation name (. direct-superclass)
     (... slots)
     ;; this is low-level about how to draw a presentation object
+    ;; please NOTE that within the defmethod of draw, object should be refered as
+    ;; `self' (may change in the future)
     (:draw (slot-var-names)
       (program-to-draw-object))
 
