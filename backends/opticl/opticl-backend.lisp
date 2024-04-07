@@ -336,9 +336,10 @@ if fails to find, return `*opticl-default-font*'. "
 Return values are bounding box of char width. "
   (values (truncate (* scale (font-size char)))))
 
-(defun text-size (char-list font font-size char-forward 
+(defun text-size (char-list font-size char-forward 
                   &optional (line-width 0 line-width-set?)
-                    (line-forward '(0 1.5)))
+                    (line-forward '(0 1.5))
+                    (font *opticl-default-font*))
   "Calculate the size of `text' when drawing with `scale'.
 
 The `font' is a `bdf' object standing for drawing font;
@@ -390,8 +391,9 @@ if not given `line-width', default assuming infinite long line. "
         do (incf v (truncate (* width forward-v)))
 
         ;; move to next line if overflow line-width
-        if (and line-width-set?
-                (> u line-width))
+        if (or (equal c #\Newline)
+               (and line-width-set?
+                    (> u line-width)))
           do (setf line-u (+ line-u forline-u)
                    line-v (+ line-v forline-v))
           and do (setf u line-u
@@ -401,12 +403,11 @@ if not given `line-width', default assuming infinite long line. "
         finally (return (values (abs (- right left))
                                 (abs (- bottom top))))))
 
-(text-size (map 'list #'identity "This is how I work")
-           *opticl-default-font*
-           16 '(1 0) 100)
+;; (text-size (map 'list #'identity "This is how I work")
+;;            *opticl-default-font*
+;;            16 '(1 0) 100)
 
-(defun draw-char (image u v char scale color
-                  &optional (font *opticl-default-font*))
+(defun draw-char (image u v char scale color)
   "Draw a char on image at position `u' and `v'.
 
 The `char' is a `char' object, for example `#\A', `#\B' and so on.
@@ -429,57 +430,120 @@ To draw a char:
                  ######
                   font-bitmap
 "
-  (let ((char (get-char font (format nil "U+~4,'0X" (char-code char)))))
-    (when char
-      (multiple-value-bind (bbw bbh bbx bby)
-          (font-bounding-box char)
-        (loop with pix = (ceiling scale) ; pixel size               
-              with u0 = (truncate (+ u (* scale bbx)))
-              with v0 = (truncate (+ v (* scale bby)))
+  (when char
+    (multiple-value-bind (bbw bbh bbx bby)
+        (font-bounding-box char)
+      (loop with pix = (ceiling scale) ; pixel size               
+            with u0 = (truncate (+ u (* scale bbx)))
+            with v0 = (truncate (+ v (* scale bby)))
 
-              for bit-row in (font-bitmap char)
-              for row below bbh
-              for j from v0 by pix
-              do (loop for bit in bit-row
-                       for col below bbw
-                       for i from u0 by pix
-                       if (= bit 1)
-                         do (apply #'fill-rectangle image
-                                   j i (+ j pix -1) (+ i pix -1) color))
-                 
-              finally (return (values (ceiling (+ u (* (font-size char) scale) pix))
-                                      v)))))))
+            for bit-row in (font-bitmap char)
+            for row below bbh
+            for j from v0 by pix
+            do (loop for bit in bit-row
+                     for col below bbw
+                     for i from u0 by pix
+                     if (= bit 1)
+                       do (apply #'fill-rectangle image
+                                 j i (+ j pix -1) (+ i pix -1) color))
+               
+            finally (return
+                      (values
+                       (ceiling (+ u (* (font-size char) scale) pix))
+                       v))))))
+
+
+
+(text-size (map 'list #'identity "adfasdf
+asdfasfdasfdsafafdsfas")
+           16
+           '(1.0 0.0))
 
 ;; ========== draw-text! ==========
 
-;; TODO: update draw-text!
+(declaim (inline norm-list num-list 2d-rotate-clockwise))
+(defun norm-list (list)
+  "Calculate the norm length of list. "
+  (apply #'+ (mapcar #'* list list)))
+
+(defun num-list (num list)
+  "Multiple list element with num. "
+  (mapcar (lambda (x) (* num x)) list))
+
+(defun 2d-rotate-clockwise (list)
+  "Rotate a 2d list 90 degree clockwise. "
+  (let ((x (first list))
+        (y (second list)))
+    (list y (- x))))
+
+;; TODO: Make this function more shorter and easy to debug...
 (defmethod draw-text! ((opticl opticl-backend) u v text
                        &key (color *foreground-color*)
-                         (font-size 12)
-                         (font-family "UNIFONT")
-                         (max-text-width 100 max-text-width-set?)
+                         (text-path '(1.0 0.0))
+                         (text-align :normal)
+                         (font-size 16)
+                         (font-name "UNIFONT")
+                         (char-spacing 1.0)
+                         (line-width 100 line-width-set?)
                          (line-spacing 1.5)
                        &allow-other-keys)
-  (loop with char-u = u
-        with char-v = v
-        with font = (find-font font-family)
-        with image = (slot-value opticl '%opticl-image)
-        with color = (rgb-color! opticl color)
-        with scale = (font-scale font font-size)
+  (let* ((char-list (map 'list #'identity text))
+         (*opticl-default-font* (find-font font-name))
+         (forward (num-list (float (/ 1 (norm-list text-path)))
+                            text-path))
+         (char-forward (num-list char-spacing forward))
+         (line-forward (num-list line-spacing
+                                 (2d-rotate-clockwise forward)))
+         (color (rgb-color! opticl color))
+         (img (slot-value opticl '%opticl-image)))
+    (multiple-value-bind (width height)
+        (if line-width-set?
+            (text-size char-list font-size char-forward
+                       line-width line-forward)
+            (text-size char-list font-size char-forward))
+      (loop with scale = (font-scale *opticl-default-font* font-size)
 
-        ;; for each char in `text'
-        for i below (length text)
-        for char = (char text i)
+            with (u0 v0) = (ecase text-align
+                             ((:normal
+                               :left
+                               :left-top
+                               :top-left)
+                              (list u v))
+                             ((:center
+                               :horizontal-center
+                               :top-center)
+                              (list (- u (truncate width 2)) v))
+                             ((:vertical-center
+                               :left-vertical-center
+                               :vertical-center-left)
+                              (list u (- v (truncate height 2))))
+                             ((:right
+                               :right-top
+                               :top-right)
+                              (list (- u width) v)))
 
-        ;; draw char and rebound the char origin `char-u' and `char-v'
-        do (multiple-value-setq (char-u char-v)
-             (draw-char image char-u char-v char
-                        scale color font))
+            with (cursor-u cursor-v) = (list u0 v0)
+            with (line-u   line-v)   = (list u0 v0)
 
-           ;; move to next line if char origin outside `max-text-width'
-        if (and max-text-width-set?
-                (> (- char-u u) max-text-width))
-          do (setf char-u u
-                   char-v (+ char-v (* font-size line-spacing)))
+            with (forward-u forward-v) = char-forward
 
-        ))
+            with (forline-u forline-v) = (mapcar #'truncate
+                                                 (num-list font-size
+                                                           line-forward))
+
+            for c in char-list
+            for char = (get-char *opticl-default-font*
+                                 (format nil "U+~4,'0X" (char-code c)))
+            for width = (char-width char scale)
+
+            do (draw-char img cursor-u cursor-v char scale color)
+            do (incf cursor-u (truncate (* width forward-u)))
+            do (incf cursor-v (truncate (* width forward-v)))
+
+            if (or (equal c #\Newline)
+                   (and line-width-set?
+                        (> cursor-u line-width)))
+              do (setf line-u (+ line-u forline-u)
+                       line-v (+ line-v forline-v))
+              and do (setf u line-u
+                           v line-v)))))
