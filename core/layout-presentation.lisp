@@ -103,7 +103,7 @@ The `weight' is the vertical weight for the component. "))
     (error (format nil "Vertical ~a needs 1 weights, got ~a only. "
                    stream weights))))
 
-(defmethod set-stream-box :after
+(defmethod set-stream-bounding-box :after
     ((stream vertical-layout-presentation) left right bottom top)
   (with-slots (%components-weights %components) stream
     (multiple-value-bind (left right bottom top)
