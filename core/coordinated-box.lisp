@@ -2,7 +2,7 @@
 
 ;; ========== helper-functions ==========
 
-(declaim (inline within-rectangle? rectangle-constrain))
+(declaim (inline within-rectangle? constrain rectangle-constrain))
 (defun within-rectangle? (x y left right bottom top)
   "Test if point x, y is within rectangle. "
   (flet ((within? (a x b)               ; if a, b brackets x
@@ -12,14 +12,14 @@
     (and (within? left x right)
          (within? bottom y top))))
 
+(defun constrain (a x b)
+  "Constrain point x within a and b. "
+  (if (< a b) (min (max a x) b) (min (max b x) a)))
+
 (defun rectangle-constrain (x y left right bottom top)
   "Constrain point x, y within rectangle. "
-  (flet ((constrain (a x b)             ; make x within a, b
-           (if (< a b)
-               (min (max a x) b)
-               (min (max b x) a))))
-    (values (constrain left x right)
-            (constrain bottom y top))))
+  (values (constrain left x right)
+          (constrain bottom y top)))
 
 ;; ========== coordinated-box ==========
 

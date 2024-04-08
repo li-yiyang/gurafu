@@ -2,15 +2,14 @@
 
 ;; ========== helper functions ==========
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (defparameter +gurafu-backends+
-    '(((:opticl-backend :opticl)
-       gurafu/backends/opticl:opticl-backend))
-    "The GURAFU backends. "))
+(defparameter +gurafu-backends+
+  '(((:opticl-backend :opticl)
+     gurafu/backends/opticl:opticl-backend))
+  "The GURAFU backends. ")
 
 (defmacro make-backend (type &key (colorspace :8-bit-rgb)
                                (height 100) (width 100))
-  "Make a"
+  "Make a GURAFU backend. "
   `(ecase ,type
      ,@(loop for (nicknames type) in +gurafu-backends+
              collect `(,nicknames
@@ -107,117 +106,118 @@ which is quite low-level... Not recommanded. "))
 
 ;; ========== draw-functions implementation ==========
 
-(macrolet ((coord (left x right)
-             `(if (and (floatp ,x) (<= ,x 0.0) (<= ,x 1.0))
-                  (truncate (+ ,left (* ,x (- ,right ,left))))
-                  (truncate (+ ,left ,x)))))
+(declaim (inline coord))
+(defun coord (left x right)
+  (if (and (<= 0.0 x) (<= x 1.0))
+      (truncate (+ left (* x (- right left))))
+      (truncate (+ left x))))
 
-  (defmethod draw-point ((obj base-presentation) x y
-                         &key (color *foreground-color*)
-                           (point-style :dot)
-                           (pen-width 1)
-                         &allow-other-keys)
-    (multiple-value-bind (left right bottom top)
-        (stream-box obj)
-      (let ((x (coord left x right))
-            (y (coord top  y bottom)))
-        (draw-point! (slot-value obj '%backend) x y
-                     :point-style point-style
+(defmethod draw-point ((obj base-presentation) x y
+                       &key (color *foreground-color*)
+                         (point-style :dot)
+                         (pen-width 1)
+                       &allow-other-keys)
+  (multiple-value-bind (left right bottom top)
+      (stream-box obj)
+    (let ((x (coord left x right))
+          (y (coord top  y bottom)))
+      (draw-point! (slot-value obj '%backend) x y
+                   :point-style point-style
+                   :pen-width pen-width
+                   :color color))))
+
+(defmethod draw-text ((obj base-presentation) x y text
+                      &key (color *foreground-color*)
+                        (text-path '(1.0 0.0))
+                        (text-align :normal)
+                        (font-size 16)
+                        (font-name "UNIFONT")
+                        (char-spacing 1.0)
+                        (line-width 0 line-width-set?)
+                        (line-spacing 1.5)
+                      &allow-other-keys)
+  (multiple-value-bind (left right bottom top)
+      (stream-box obj)
+    (let ((x (coord left x right))
+          (y (coord top  y bottom)))
+      (with-slots (%backend) obj
+        ;; I hate this, must change this later...
+        (if line-width-set?
+            (draw-text! %backend x y text
+                        :color        color
+                        :text-path    text-path
+                        :text-align   text-align
+                        :font-size    font-size
+                        :font-name    font-name
+                        :char-spacing char-spacing
+                        :line-width   line-width
+                        :line-spacing line-spacing)
+            (draw-text! %backend x y text
+                        :color        color
+                        :text-path    text-path
+                        :text-align   text-align
+                        :font-size    font-size
+                        :font-name    font-name
+                        :char-spacing char-spacing
+                        :line-spacing line-spacing))))))
+
+(defmethod draw-triangle ((obj base-presentation) x1 y1 x2 y2 x3 y3
+                          &key (color *foreground-color*)
+                            (pen-width 1)
+                            (line-style :solid)
+                            (fill? t)
+                            (fill-color color)
+                          &allow-other-keys)
+  (multiple-value-bind (left right bottom top)
+      (stream-box obj)
+    (let ((x1 (coord left x1 right))
+          (y1 (coord top  y1 bottom))
+          (x2 (coord left x2 right))
+          (y2 (coord top  y2 bottom))
+          (x3 (coord left x3 right))
+          (y3 (coord top  y3 bottom)))
+      (draw-tringle! (slot-value obj '%backend)
+                     x1 y1 x2 y2 x3 y3
+                     :fill-color fill-color
+                     :fill? fill?
+                     :line-style line-style
                      :pen-width pen-width
                      :color color))))
 
-  (defmethod draw-text ((obj base-presentation) x y text
-                        &key (color *foreground-color*)
-                          (text-path '(1.0 0.0))
-                          (text-align :normal)
-                          (font-size 16)
-                          (font-name "UNIFONT")
-                          (char-spacing 1.0)
-                          (line-width 0 line-width-set?)
-                          (line-spacing 1.5)
-                        &allow-other-keys)
-    (multiple-value-bind (left right bottom top)
-        (stream-box obj)
-      (let ((x (coord left x right))
-            (y (coord top  y bottom)))
-        (with-slots (%backend) obj
-          ;; I hate this, must change this later...
-          (if line-width-set?
-              (draw-text! %backend x y text
-                          :color        color
-                          :text-path    text-path
-                          :text-align   text-align
-                          :font-size    font-size
-                          :font-name    font-name
-                          :char-spacing char-spacing
-                          :line-width   line-width
-                          :line-spacing line-spacing)
-              (draw-text! %backend x y text
-                          :color        color
-                          :text-path    text-path
-                          :text-align   text-align
-                          :font-size    font-size
-                          :font-name    font-name
-                          :char-spacing char-spacing
-                          :line-spacing line-spacing))))))
+(defmethod draw-rect ((obj base-presentation) x1 y1 x2 y2
+                      &key (color *foreground-color*)
+                        (pen-width 1)
+                        (line-style :solid)
+                        (fill? t)
+                        (fill-color color)
+                      &allow-other-keys)
+  (multiple-value-bind (left right bottom top)
+      (stream-box obj)
+    (let ((x1 (coord left x1 right))
+          (y1 (coord top  y1 bottom))
+          (x2 (coord left x2 right))
+          (y2 (coord top  y2 bottom)))
+      (draw-rect! (slot-value obj '%backend)
+                  x1 y1 x2 y2
+                  :line-style line-style
+                  :pen-width pen-width
+                  :color color
+                  :fill? fill?
+                  :fill-color fill-color))))
 
-  (defmethod draw-triangle ((obj base-presentation) x1 y1 x2 y2 x3 y3
-                            &key (color *foreground-color*)
-                              (pen-width 1)
-                              (line-style :solid)
-                              (fill? t)
-                              (fill-color color)
-                            &allow-other-keys)
-    (multiple-value-bind (left right bottom top)
-        (stream-box obj)
-      (let ((x1 (coord left x1 right))
-            (y1 (coord top  y1 bottom))
-            (x2 (coord left x2 right))
-            (y2 (coord top  y2 bottom))
-            (x3 (coord left x3 right))
-            (y3 (coord top  y3 bottom)))
-        (draw-tringle! (slot-value obj '%backend)
-                       x1 y1 x2 y2 x3 y3
-                       :fill-color fill-color
-                       :fill? fill?
-                       :line-style line-style
-                       :pen-width pen-width
-                       :color color))))
-
-  (defmethod draw-rect ((obj base-presentation) x1 y1 x2 y2
-                        &key (color *foreground-color*)
-                          (pen-width 1)
-                          (line-style :solid)
-                          (fill? t)
-                          (fill-color color)
-                        &allow-other-keys)
-    (multiple-value-bind (left right bottom top)
-        (stream-box obj)
-      (let ((x1 (coord left x1 right))
-            (y1 (coord top  y1 bottom))
-            (x2 (coord left x2 right))
-            (y2 (coord top  y2 bottom)))
-        (draw-rect! (slot-value obj '%backend)
-                    x1 y1 x2 y2
-                    :line-style line-style
-                    :pen-width pen-width
-                    :color color
-                    :fill? fill?
-                    :fill-color fill-color))))
-
-  (defmethod draw-line ((obj base-presentation) x1 y1 x2 y2
-                        &key (color *foreground-color*)
-                          (pen-width 1)
-                          (line-style :solid)
-                        &allow-other-keys)
-    (multiple-value-bind (left right bottom top)
-        (stream-box obj)
-      (let ((x1 (coord left x1 right))
-            (y1 (coord top  y1 bottom))
-            (x2 (coord left x2 right))
-            (y2 (coord top  y2 bottom)))
-        (draw-line! (slot-value obj '%backend)
-                    x1 y1 x2 y2
-                    :line-style line-style
-                    :pen-width pen-width
-                    :color color)))))
+(defmethod draw-line ((obj base-presentation) x1 y1 x2 y2
+                      &key (color *foreground-color*)
+                        (pen-width 1)
+                        (line-style :solid)
+                      &allow-other-keys)
+  (multiple-value-bind (left right bottom top)
+      (stream-box obj)
+    (let ((x1 (coord left x1 right))
+          (y1 (coord top  y1 bottom))
+          (x2 (coord left x2 right))
+          (y2 (coord top  y2 bottom)))
+      (draw-line! (slot-value obj '%backend)
+                  x1 y1 x2 y2
+                  :line-style line-style
+                  :pen-width pen-width
+                  :color color))))

@@ -18,22 +18,14 @@
    #:draw-text!
 
    ;; colored-mixin
-   #:+white+
-   #:+black+
    #:+colorful-colorspace+
    #:+grayful-colorspace+
-   #:*foreground-color*
-   #:*background-color*
-   #:colorspace
    #:colorful?
    #:real-colorspace-name!
    #:rgb-color!
    )
   (:documentation
    "The GURAFU backend should use `gurafu/protocol' as foundamental
-plotting/interacting instructions.
-
-Naming convention:
-+ the method postfix with `!' stands for the low level instructions"))
+plotting/interacting instructions."))
 
 (in-package :gurafu/protocol)
