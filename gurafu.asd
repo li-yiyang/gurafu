@@ -31,8 +31,10 @@ follow the behavior defined in `gurafu/protocol'. "
   :pathname "core"
   :serial t
   :components ((:file "core")
+               (:file "colors")
                (:file "coordinated-box")
                (:file "margined-mixin")
+               (:file "xy-box-mixin")
                (:file "base-presentation")
                (:file "layout-presentation")
                (:file "define-presentation")))

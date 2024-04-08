@@ -2,14 +2,6 @@
 
 ;; ========== pre-defined colors ==========
 
-(defconstant +white+
-  '(1.0 1.0 1.0)
-  "GURAFU white color. ")
-
-(defconstant +black+
-  '(0.0 0.0 0.0)
-  "GURAFU black color. ")
-
 (defparameter +colorful-colorspace+
   '(:rgb :8-bit-rgb)
   "Colorspaces supporting colored output. ")
@@ -18,16 +10,11 @@
   '(:gray :grayscale :grey :greyscale)
   "Colorspaces supporting grayscale output. ")
 
-(defparameter *foreground-color* +black+)
-
-(defparameter *background-color* +white+)
-
 ;; ========== colored-mixin ==========
 
 (defclass colored-mixin ()
   ((%colorspace :initform :8-bit-rgb
-                :initarg :colorspace
-                :reader colorspace))
+                :initarg :colorspace))
   (:documentation
    "This foundamental protocol class defines the color methods.
 It should perform as a translation between different device
@@ -48,7 +35,7 @@ color settings.
    "Test if a `stream' supports colored output. "))
 
 (defmethod colorful? ((stream colored-mixin))
-  (find (slot-value stream 'colorspace) +colorful-colorspace+))
+  (find (slot-value stream '%colorspace) +colorful-colorspace+))
 
 ;; ========== real-colorspace-name! ==========
 
