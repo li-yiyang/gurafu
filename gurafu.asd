@@ -34,7 +34,7 @@ follow the behavior defined in `gurafu/protocol'. "
                (:file "colors")
                (:file "coordinated-box")
                (:file "margined-mixin")
-               (:file "xy-box-mixin")
+               (:file "xy-box-present")
                (:file "base-presentation")
                (:file "layout-presentation")
                (:file "define-presentation")))

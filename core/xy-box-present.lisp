@@ -2,7 +2,7 @@
 
 ;; ========== xy-box-mixin ==========
 
-(defclass xy-box-present (base-presentation)
+(defclass xy-box-mixin ()
   ((%x-min :initform 0.0 :initarg :x-min)
    (%x-max :initform 1.0 :initarg :x-max)
    (%y-min :initform 0.0 :initarg :y-min)
@@ -15,10 +15,10 @@
 which handles how the user set position `x', `y' is mapped
 to digital plotting `u', `v'.
 
-When using `xy-box-present', the `draw-*' method will use the
+When using `xy-box-mixin', the `draw-*' method will use the
 `x', `y' coordinates rather than `u' and `v'.
 
-The `xy-box-present' provides quick access macros for coordinates
+The `xy-box-mixin' provides quick access macros for coordinates
 transformation `with-xy-to-uv' and `with-uv-to-xy'. 
 
 By normal, the coordinate is like below:
@@ -45,7 +45,7 @@ The `%xy-to-uv-trans':
   v = uv-bottom - y-scale * (y - xy-bottom)
     => (uv-bottom + y-scale * xy-bottom) - y-scale * y
 
-The `%xy-to-uv-trans':
+The `%uv-to-xy-trans':
 
   u-scale = (xy-right - xy-left) / (uv-right - uv-left)
   v-scale = (xy-top - xy-bottom) / (uv-bottom - uv-top)
@@ -64,7 +64,7 @@ The `%xy-to-uv-trans':
    "Get the xy bounding box for `stream'.
 Return values are `x-min', `x-max', `y-min', `y-max'. "))
 
-(defmethod xy-bounding-box ((stream xy-box-present))
+(defmethod xy-bounding-box ((stream xy-box-mixin))
   (with-slots (%x-min %x-max %y-min %y-max) stream
     (values %x-min %x-max %y-min %y-max)))
 
@@ -87,7 +87,7 @@ Return values are `x-min', `x-max', `y-min', `y-max'. "))
                (setf (slot-value stream '%xy-to-uv-trans)
                      (lambda (x y)
                        (values (+ u0 (truncate (* x-scale x)))
-                               (+ v0 (truncate (* y-scale y))))))))))
+                               (- v0 (truncate (* y-scale y))))))))))
        
        (update-uv-to-xy (stream)
          (with-slots (%x-min %x-max %y-min %y-max) stream
@@ -105,7 +105,7 @@ Return values are `x-min', `x-max', `y-min', `y-max'. "))
   
   ;; ========== set-xy-bounding-box ==========
   (defmethod set-xy-bounding-box
-      ((stream xy-box-present) x-min x-max y-min y-max)
+      ((stream xy-box-mixin) x-min x-max y-min y-max)
     (with-slots (%x-min %x-max %y-min %y-max) stream
       ;; update xy bounding box
       (setf %x-min x-min
@@ -121,14 +121,14 @@ Return values are `x-min', `x-max', `y-min', `y-max'. "))
 
   ;; ========== initialize-instance ==========
   (defmethod initialize-instance :after
-      ((obj xy-box-present) &key)
+      ((obj xy-box-mixin) &key)
     (update-xy-to-uv obj)
     (update-uv-to-xy obj))
 
   ;; ========== set-stream-box ==========
 
   (defmethod set-stream-box :after
-      ((obj xy-box-present) left right bottom top)
+      ((obj xy-box-mixin) left right bottom top)
     (declare (ignore left right bottom top))
     (update-xy-to-uv obj)
     (update-uv-to-xy obj)))
@@ -168,6 +168,12 @@ Example:
          (with-xy-to-uv ,stream ,(cddr bindings) ,@body))))
 
 ;; ========== draw-* functions ==========
+
+(defclass xy-box-present (base-presentation
+                          xy-box-mixin)
+  ()
+  (:documentation
+   ""))
 
 (defmethod draw-point ((obj xy-box-present) x y
                        &key (color *foreground-color*)
