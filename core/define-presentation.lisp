@@ -31,7 +31,7 @@
                if (listp item)
                  collect item
                else
-                 collect (list item 0.0 0.0 0.0 0.0)))
+                 collect (list item 0.0 0.0 1.0 1.0)))
        
        (non-stack-weighted (description)
          (let ((weighted ())

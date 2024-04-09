@@ -2,10 +2,11 @@
 
 ;; ========== helper functions ==========
 
-(defparameter +gurafu-backends+
-  '(((:opticl-backend :opticl)
-     gurafu/backends/opticl:opticl-backend))
-  "The GURAFU backends. ")
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defparameter +gurafu-backends+
+    '(((:opticl-backend :opticl)
+       gurafu/backends/opticl:opticl-backend))
+    "The GURAFU backends. "))
 
 (defmacro make-backend (type &key (colorspace :8-bit-rgb)
                                (height 100) (width 100))

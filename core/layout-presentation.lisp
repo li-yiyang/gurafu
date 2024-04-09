@@ -3,7 +3,7 @@
 ;; ========== layout-presentation ==========
 
 (defclass layout-presentation (base-presentation)
-  ((%components         :initform (make-hash-table))
+  ((%components         :initform (make-hash-table :test 'equal))
    (%components-weights :initform ()))
   (:documentation
    "A simple layout mixin.
@@ -34,10 +34,23 @@ The component will be append to the end of `%components-weights'. "))
   (with-slots (%components %components-weights) stream
     ;; register components to the end of `%components-weights'
     (setf %components-weights
-          (nreverse (cons (cons name weights)
-                          (nreverse %components-weights))))
+          (nconc %components-weights (list (cons name weights))))
+    
     ;; add components to the `%components'
     (setf (gethash name %components) component)))
+
+;; ========== loop-components ==========
+
+(defmacro loop-components ((layout comp-var &rest weight-vars) &body body)
+  "Loop through the components of `layout'. "
+  (with-gensyms (comp-name weights components)
+    `(loop with ,weights = (slot-value ,layout '%components-weights)
+           with ,components = (slot-value ,layout '%components)
+           
+           for (,comp-name ,@weight-vars) in ,weights
+           for ,comp-var = (gethash ,comp-name ,components)
+
+           do (progn ,@body))))
 
 ;; ========== stack-layout-presentation ==========
 
@@ -64,23 +77,16 @@ The `w-weight', `h-weight' is the stacked size for the compoent. "))
 
 (defmethod set-stream-bounding-box :after
     ((stream stack-layout-presentation) lfet right bottom top)
-  (with-slots (%components-weights %components) stream
-    (multiple-value-bind (left right bottom top)
-        (stream-box stream)
-      (loop with width  = (- right left)
-            with height = (- bottom top)
-
-            for (name u-w v-w w-w h-w) in %components-weights
-            for component = (gethash name %components)
-
-            ;; compute the four corner for the component
-            for ul = (truncate (+ (* u-w width)  left))
-            for vt = (truncate (+ (* v-w height) top))
-            for ur = (truncate (+ (* w-w width)  ul))
-            for vb = (truncate (+ (* h-w height) vt))
-
-            ;; update inside component position information
-            do (set-stream-bounding-box component ul ur vb vt)))))
+  (multiple-value-bind (left right bottom top)
+      (stream-box stream)
+    (let ((width (- right left))
+          (height (- bottom top)))
+      (loop-components (stream component u-w v-w w-w h-w)
+        (let* ((ul (truncate (+ (* u-w width)  left)))
+               (vt (truncate (+ (* v-w height) top)))
+               (ur (truncate (+ (* w-w width)  ul)))
+               (vb (truncate (+ (* h-w height) vt))))
+          (set-stream-bounding-box component ul ur vb vt))))))
 
 ;; ========== verticl-layout-presentation ==========
 
@@ -105,20 +111,14 @@ The `weight' is the vertical weight for the component. "))
 
 (defmethod set-stream-bounding-box :after
     ((stream vertical-layout-presentation) left right bottom top)
-  (with-slots (%components-weights %components) stream
-    (multiple-value-bind (left right bottom top)
-        (stream-box stream)
-      (loop with height = (- bottom top)
-            with vt = top
-
-            for (name weight) in %components-weights
-            for component = (gethash name %components)
-
-            ;; compute the position for the inner component
-            for vb = (truncate (+ vt (* weight height)))
-
-            do (set-stream-bounding-box component left right vb vt)
-            do (setf vt vb)))))
+  (multiple-value-bind (left right bottom top)
+      (stream-box stream)
+    (let ((height (- bottom top))
+          (vt top))
+      (loop-components (stream component w)
+        (let* ((vb (truncate (+ (* w height) vt))))
+          (set-stream-bounding-box component left right vb vt)
+          (setf vt vb))))))
 
 ;; ========== horizontal-layout-mixin ==========
 
@@ -136,19 +136,14 @@ The `weight' is the vertical weight for the component. "))
 
 (defmethod set-stream-bounding-box :after
     ((stream horizontal-layout-presentation) left right bottom top)
-  (with-slots (%components-weights %components) stream
-    (multiple-value-bind (left right bottom top)
-        (stream-box stream)
-      (loop with width = (- right left)
-            with ul = left
-
-            for (name weight) in %components-weights
-            for component = (gethash name %components)
-
-            for ur = (truncate (+ ul (* weight width)))
-
-            do (set-stream-bounding-box component ul ur bottom top)
-            do (setf ul ur)))))
+  (multiple-value-bind (left right bottom top)
+      (stream-box stream)
+    (let ((width (- right left))
+          (ul left))
+      (loop-components (stream component w)
+        (let* ((ur (truncate (+ (* w width) ul))))
+          (set-stream-bounding-box component ul ur bottom top)
+          (setf ul ur))))))
 
 ;; ========== layout-presentation ==========
 
