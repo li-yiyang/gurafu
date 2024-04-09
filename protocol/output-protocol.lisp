@@ -99,6 +99,17 @@ Return values are uv bounding box left, right, bottom and top. "))
 Default filling (`fill?') with `fill-color'.
 Return values are uv bounding box left, right, bottom and top. "))
 
+;; ========== draw-text-width! ==========
+
+(defrequired draw-text-size! (stream
+                              text
+                              &key text-path text-align
+                              line-width line-spacing
+                              char-spacing font-size font-name
+                              &allow-other-keys)
+  (:documentation
+   "Get the size of `text' when drawing on `stream'. "))
+
 ;; ========== draw-text! ==========
 
 (defrequired darw-text! (stream

@@ -16,6 +16,7 @@
    #:draw-tringle!
    #:draw-circle!
    #:draw-text!
+   #:draw-text-size!
 
    ;; colored-mixin
    #:+white+
@@ -24,6 +25,7 @@
    #:+green+
    #:+blue+
    #:+yellow+
+   #:+gray+
    #:*foreground-color*
    #:*background-color*
 

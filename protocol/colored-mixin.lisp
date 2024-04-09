@@ -32,6 +32,10 @@
   '(1.0 1.0 0.0)
   "GURAFU yellow color. ")
 
+(defconstant +gray+
+  '(0.1 0.1 0.1)
+  "GURAFU gray color. ")
+
 ;; ========== *foreground-color* ==========
 ;; ========== *background-color* ==========
 

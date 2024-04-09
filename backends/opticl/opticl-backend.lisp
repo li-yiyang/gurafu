@@ -411,10 +411,6 @@ if not given `line-width', default assuming infinite long line. "
         finally (return (values (abs (- right left))
                                 (abs (- bottom top))))))
 
-;; (text-size (map 'list #'identity "This is how I work")
-;;            *opticl-default-font*
-;;            16 '(1 0) 100)
-
 (defun draw-char (image u v char scale color)
   "Draw a char on image at position `u' and `v'.
 
@@ -460,14 +456,7 @@ To draw a char:
                        (ceiling (+ u (* (font-size char) scale) pix))
                        v))))))
 
-
-
-(text-size (map 'list #'identity "adfasdf
-asdfasfdasfdsafafdsfas")
-           16
-           '(1.0 0.0))
-
-;; ========== draw-text! ==========
+;; ========== draw text helper functions  ==========
 
 (declaim (inline norm-list num-list 2d-rotate-clockwise))
 (defun norm-list (list)
@@ -483,6 +472,30 @@ asdfasfdasfdsafafdsfas")
   (let ((x (first list))
         (y (second list)))
     (list y (- x))))
+
+;; ========== draw-text-size! ==========
+
+(defmethod draw-text-size! ((opticl opticl-backend) text
+                            &key (text-path '(1.0 0.0))
+                              (font-size 16)
+                              (font-name "UNIFONT")
+                              (char-spacing 1.0)
+                              (line-width 100 line-width-set?)
+                              (line-spacing 1.5)
+                            &allow-other-keys)
+  (let* ((char-list (map 'list #'identity text))
+         (*opticl-default-font* (find-font font-name))
+         (forward (num-list (float (/ 1 (norm-list text-path)))
+                            text-path))
+         (char-forward (num-list char-spacing forward))
+         (line-forward (num-list line-spacing
+                                 (2d-rotate-clockwise forward))))
+    (if line-width-set?
+        (text-size char-list font-size char-forward
+                   line-width line-forward)
+        (text-size char-list font-size char-forward))))
+
+;; ========== draw-text! ==========
 
 ;; TODO: Make this function more shorter and easy to debug...
 (defmethod draw-text! ((opticl opticl-backend) u v text
@@ -528,7 +541,15 @@ asdfasfdasfdsafafdsfas")
                              ((:right
                                :right-top
                                :top-right)
-                              (list (- u width) v)))
+                              (list (- u width) v))
+                             ((:bottom
+                               :left-bottom)
+                              (list u (- v height)))
+                             ((:right-bottom)
+                              (list (- u width) (- v height)))
+                             ((:right-center
+                               :right-vertical-center)
+                              (list (- u width) (- v (truncate height 2)))))
 
             with (cursor-u cursor-v) = (list u0 v0)
             with (line-u   line-v)   = (list u0 v0)
