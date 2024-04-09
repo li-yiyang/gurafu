@@ -18,8 +18,18 @@
    #:draw-text!
 
    ;; colored-mixin
+   #:+white+
+   #:+black+
+   #:+red+
+   #:+green+
+   #:+blue+
+   #:+yellow+
+   #:*foreground-color*
+   #:*background-color*
+
    #:+colorful-colorspace+
    #:+grayful-colorspace+
+   #:colorspace!
    #:colorful?
    #:real-colorspace-name!
    #:rgb-color!

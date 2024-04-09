@@ -64,8 +64,7 @@ if fails to find, return `*opticl-default-font*'. "
 
 ;; ========== opticl-backend ==========
 
-(defclass opticl-backend (output-protocol
-                          bdf-font-mixin)
+(defclass opticl-backend (output-protocol)
   ((%opticl-image      :initform nil)
    (%opticl-colorspace :initform nil))
   (:documentation
@@ -100,7 +99,7 @@ if fails to find, return `*opticl-default-font*'. "
   (with-slots (%opticl-colorspace %opticl-image) opticl
     ;; set the `%opticl-colorspace'
     (setf %opticl-colorspace
-          (ecase (colorspace opticl)
+          (ecase (colorspace! opticl)
             ((:rgb :8-bit-rgb) :8-bit-rgb)
             ((:gray :grayscale :grey :greyscale) :8-bit-gray)))
     ;; init the `%opticl-image'

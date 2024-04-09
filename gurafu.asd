@@ -48,6 +48,5 @@ follow the behavior defined in `gurafu/protocol'. "
                :cl-bdf)
   :pathname "backends/opticl"
   :serial t
-  :components ((:file "opticl")              
-               (:file "bdf-font-mixin")
+  :components ((:file "opticl")               
                (:file "opticl-backend")))

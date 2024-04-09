@@ -2,6 +2,45 @@
 
 ;; ========== pre-defined colors ==========
 
+;; ========== basic pre-defined colors ==========
+;; Below are some basic colors defined for simple usage.
+;; Although I do not recommand you to use this colors,
+;; except for `+white+' and `+black+', since they are
+;; in high saturation, which is quite ugly, though...
+
+(defconstant +white+
+  '(1.0 1.0 1.0)
+  "GURAFU white color. ")
+
+(defconstant +black+
+  '(0.0 0.0 0.0)
+  "GURAFU black color. ")
+
+(defconstant +red+
+  '(1.0 0.0 0.0)
+  "GURAFU red color. ")
+
+(defconstant +green+
+  '(0.0 1.0 0.0)
+  "GURAFU green color. ")
+
+(defconstant +blue+
+  '(0.0 0.0 1.0)
+  "GURAFU blue color. ")
+
+(defconstant +yellow+
+  '(1.0 1.0 0.0)
+  "GURAFU yellow color. ")
+
+;; ========== *foreground-color* ==========
+;; ========== *background-color* ==========
+
+(defparameter *foreground-color* +black+
+  "The default GURAFU color draw foreground. ")
+
+(defparameter *background-color* +white+
+  "The default GURAFU color draw background. ")
+
 (defparameter +colorful-colorspace+
   '(:rgb :8-bit-rgb)
   "Colorspaces supporting colored output. ")
@@ -14,7 +53,8 @@
 
 (defclass colored-mixin ()
   ((%colorspace :initform :8-bit-rgb
-                :initarg :colorspace))
+                :initarg :colorspace
+                :reader  colorspace!))
   (:documentation
    "This foundamental protocol class defines the color methods.
 It should perform as a translation between different device
