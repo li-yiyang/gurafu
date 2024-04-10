@@ -83,7 +83,7 @@ Also, you may try some more plot pane types:
   #+name: histogram-pane-example
   #+header: :var out-path=(expand-file-name "./demo-img/histogram-pane-demo.png")
   #+header: :var dat-path=(expand-file-name "./demo-dat/hist.txt")
-  #+begin_src lisp :results file 
+  #+begin_src lisp :results file :exports both
     (in-package :gurafu)
 
     (with-present-to-file (plot out-path plot :margin 20 :tick-precise 0)
