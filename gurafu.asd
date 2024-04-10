@@ -34,10 +34,11 @@ follow the behavior defined in `gurafu/protocol'. "
                (:file "colors")
                (:file "coordinated-box")
                (:file "margined-mixin")
-               (:file "xy-box-present")
                (:file "base-presentation")
+               (:file "xy-box-present")               
                (:file "layout-presentation")
-               (:file "define-presentation")))
+               (:file "define-presentation")
+               (:file "plot")))
 
 (defsystem #:gurafu/backends/opticl
   :author ("凉凉")

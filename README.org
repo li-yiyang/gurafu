@@ -49,7 +49,7 @@ Here's a more advanced (although still very dirty) example for drawing a plot:
 
 #+begin_src lisp
   (let* ((*default-backend* (make-backend :opticl :width 400 :height 400))
-         ((plot (make-instance 'plot :margin 10))))
+         (plot (make-instance 'plot :margin 10)))
     (add-plot-data plot 'sin
                    (loop for x from -10.0 upto 10.0 by 0.1
                          collect (list x (sin x)))
