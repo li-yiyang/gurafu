@@ -2,8 +2,20 @@
   :author ("凉凉")
   :version "0"
   :description "This is a package that deals with ploting."
-  :depends-on ()
+  :depends-on (:gurafu/plot)
   :components ((:file "package")))
+
+(defsystem #:gurafu/plot
+  :author ("凉凉")
+  :version "0"
+  :description "This is a package that draw the plot on GURAFU. "
+  :pathname "plot"
+  :depends-on (:gurafu/core)
+  :components ((:file "plot-package")
+               (:file "basic-plot-pane")
+               (:file "line-plot-pane")
+               (:file "histogram-pane")
+               (:file "plot")))
 
 (defsystem #:gurafu/protocol
   :author ("凉凉")
@@ -37,8 +49,7 @@ follow the behavior defined in `gurafu/protocol'. "
                (:file "base-presentation")
                (:file "xy-box-present")               
                (:file "layout-presentation")
-               (:file "define-presentation")
-               (:file "plot")))
+               (:file "define-presentation")))
 
 (defsystem #:gurafu/backends/opticl
   :author ("凉凉")

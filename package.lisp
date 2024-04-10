@@ -1,2 +1,2 @@
 (defpackage :gurafu
-  (:use :cl))
+  (:use :cl :gurafu/core :gurafu/plot))

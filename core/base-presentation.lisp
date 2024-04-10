@@ -68,6 +68,19 @@ which is quite low-level... Not recommanded. "))
 (defmethod present (obj)
   (declare (ignore obj)))
 
+;; ========== with-present-to-file ==========
+
+(defmacro with-present-to-file ((var file type &rest init-args) &body body)
+  "Dirty quick presentations. "
+  `(let* ((width 400)
+          (height 400)
+          (*default-backend* (make-backend :opticl :width width :height height))
+          (,var (make-instance ',type ,@init-args)))
+     ,@body
+     (set-stream-bounding-box ,var 0 width height 0)
+     (present ,var)
+     (output! *default-backend* ,file)))
+
 ;; ========== draw-functions ==========
 
 (defgeneric draw-point (obj x y

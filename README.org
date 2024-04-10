@@ -48,8 +48,10 @@ You could see the result as below:
 Here's a more advanced (although still very dirty) example for drawing a plot:
 
 #+begin_src lisp
-  (let* ((*default-backend* (make-backend :opticl :width 400 :height 400))
-         (plot (make-instance 'plot :margin 10)))
+  (ql:quickload :gurafu)
+  (in-package :gurafu)
+
+  (with-present-to-file (plot "/path/to/first-usable-plot-sin-cos-demo.png" plot :margin 10)
     (add-plot-data plot 'sin
                    (loop for x from -10.0 upto 10.0 by 0.1
                          collect (list x (sin x)))
@@ -57,11 +59,7 @@ Here's a more advanced (although still very dirty) example for drawing a plot:
     (add-plot-data plot 'sqaure
                    (loop for x from -10.0 upto 10.0 by 0.1
                          collect (list x (cos x)))
-                   :color +green+)
-    (rescale-plot-pane plot)
-    (set-stream-bounding-box plot 0 400 400 0)
-    (present plot)
-    (output! *default-backend* "/path/to/first-usable-plot-sin-cos-demo.png"))
+                   :color +green+))
 #+end_src
 
 You could see the result as below:

@@ -15,22 +15,26 @@
    #:+green+
    #:+blue+
    #:+yellow+
+   #:+gray+
    #:*foreground-color*
    #:*background-color*
    
    ;; coordinated-box
+   #:coordinated-box
    #:stream-box
    #:set-stream-box
    #:stream-bounding-box
    #:set-stream-bounding-box
 
    ;; margined-mixin
+   #:margined-mixin
    #:stream-margins
    #:set-stream-margins
 
    ;; base-presentation
    #:+gurafu-backends+
    #:make-backend
+   #:with-present-to-file
    
    #:*default-backends*
    
@@ -38,6 +42,7 @@
    #:present
    #:draw-point
    #:draw-text
+   #:draw-text-size
    #:draw-triangle
    #:draw-rect
    #:draw-circle
@@ -55,6 +60,8 @@
    #:stack-layout-presentation
    #:vertical-layout-presentation
    #:horizontal-layout-presentation
+   #:add-component
+   #:loop-components
 
    ;; define-presentation
    #:define-presentation
