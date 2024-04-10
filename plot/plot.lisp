@@ -171,5 +171,5 @@ The `plot' is a collection of `plot-pane' which draws the "))
   (:documentation
    "Get the plot-pane with `name' in `plot'. "))
 
-(defmethod get-plot-pane ((plot plot) name)
-  (gethash name (slot-value plot '%components)))
+(defmethod get-plot-pane ((plot plot) name)  
+  (gethash name (get-component plot)))

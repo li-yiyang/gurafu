@@ -228,7 +228,9 @@ Example:
   (with-xy-to-uv obj
       ((u1 v1) (x1 y1)
        (u2 v2) (x2 y2))
-    (draw-rect! (slot-value obj '%backend) u1 v2 u2 v1
+    (draw-rect! (slot-value obj '%backend)
+                (min u1 u2) (min v1 v2)
+                (max u1 u2) (max v1 v2)
                 :fill-color fill-color
                 :fill?      fill?
                 :line-style line-style

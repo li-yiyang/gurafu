@@ -9,15 +9,20 @@
    :with-gensyms)
   (:export
    ;; colors
-   #:+white+
-   #:+black+
-   #:+red+
-   #:+green+
-   #:+blue+
-   #:+yellow+
-   #:+gray+
-   #:*foreground-color*
-   #:*background-color*
+   #:+绛+
+   #:+赤+
+   #:+朱+
+   #:+丹+
+   #:+红+
+   #:+妃红+
+   #:+品红+
+   #:+海棠+
+   #:+胭脂+
+   #:+绯+
+   #:+赭+
+   #:+茜+
+   #:+殷红+
+   #:+桃红+
    
    ;; coordinated-box
    #:coordinated-box
@@ -60,6 +65,7 @@
    #:stack-layout-presentation
    #:vertical-layout-presentation
    #:horizontal-layout-presentation
+   #:get-component
    #:add-component
    #:loop-components
 

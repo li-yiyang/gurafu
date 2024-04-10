@@ -3,7 +3,8 @@
 ;; ========== layout-presentation ==========
 
 (defclass layout-presentation (base-presentation)
-  ((%components         :initform (make-hash-table :test 'equal))
+  ((%components         :initform (make-hash-table :test 'equal)
+                        :reader get-component)
    (%components-weights :initform ()))
   (:documentation
    "A simple layout mixin.
