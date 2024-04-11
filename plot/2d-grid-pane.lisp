@@ -8,7 +8,7 @@
 Return a function. "
   (lambda (w)
     (let ((w (min 1.0 (max w 0.0))))
-      (mapcar (lambda (min max) (+ (* w min) (* (- 1 w) max)))
+      (mapcar (lambda (min max) (+ (* w max) (* (- 1 w) min)))
               min-color max-color))))
 
 ;; ========== 2d-grid-pane ==========
@@ -42,25 +42,14 @@ Return a function. "
 (defmethod present ((grid 2d-grid-pane))
   (multiple-value-bind (%x-min %x-max %y-min %y-max)
       (xy-bounding-box grid)
-    (with-slots (%plot-data %color-map-fn)
+    (with-slots (%plot-data %color-map-fn %z-max %z-min)
         grid
       (loop with height = (float (/ (- %y-max %y-min) (length %plot-data)))
             for row in %plot-data
             for y-max from %y-max downto %y-min by height
             do (loop with width = (float (/ (- %x-max %x-min) (length row)))
                      for gridv in row
+                     for unit = (float (/ (- gridv %z-min) (- %z-max %z-min)))
                      for x-min from %x-min to %x-max by width
                      do (draw-rect grid x-min y-max (+ x-min width) (- y-max height)
-                                   :color (funcall %color-map-fn gridv)))))))
-
-;; ========== test ==========
-
-(with-present-to-file (plot "~/Buff/test.png" plot
-                            :margin 20)
-  (add-plot-data plot 'grid
-                 (loop for y from -10 upto 10 by 0.5
-                       collect (loop for x from -10 upto 10 by 0.5
-                                     collect (sin (sqrt (+ (* x x) (* y y))))))
-                 :pane-type '2d-grid-pane
-                 :color (make-linear-color-mapper +white+ +桃红+))
-  (set-xy-bounding-box plot -10.0 10.0 -10.0 10.0))
+                                   :color (funcall %color-map-fn unit)))))))

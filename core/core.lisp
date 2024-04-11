@@ -9,6 +9,15 @@
    :with-gensyms)
   (:export
    ;; colors
+   #:+white+
+   #:+black+
+   #:+red+
+   #:+green+
+   #:+blue+
+   #:+yellow+
+   #:+gray+
+   #:*foreground-color*
+   #:*background-color*
    #:+绛+
    #:+赤+
    #:+朱+

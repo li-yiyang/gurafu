@@ -12,7 +12,7 @@ result may loss the `max' point of `hist-data'."
   (let ((plot-data (make-array (list bins)))
         (bin-width (float (/ (- max min) bins))))
     (loop for dat in hist-data
-          for idx = (ceiling (/ (- dat min) bin-width))
+          for idx = (truncate (/ (- dat min) bin-width))
           if (and (< idx bins) (>= idx 0))
             do (incf (aref plot-data idx)))
     (loop for idx below bins

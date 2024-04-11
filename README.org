@@ -108,6 +108,8 @@ Also, you may try some more plot pane types:
   #+name: 2d-grid-pane
   #+header: :var out-path="./demo-img/2d-grid-pane-demo.png"
   #+begin_src lisp :results file :exports both
+    (in-package :gurafu)
+
     (with-present-to-file (plot out-path plot :margin 20)
       (add-plot-data plot 'grid
                      (loop for y from -10 upto 10 by 0.5
@@ -121,6 +123,32 @@ Also, you may try some more plot pane types:
 
   #+RESULTS: 2d-grid-pane
   [[file:./demo-img/2d-grid-pane-demo.png]]
++ =2d-histogram-pane=
+
+  #+name: 2d-histogram-pane
+  #+header: :var out-path="./demo-img/2d-histogram-pane-demo.png"
+  #+begin_src lisp :results file :exports both
+    (in-package :gurafu)
+
+    (let ((points (loop for i below 10000
+                        for r = (+ 0.5 (random 0.5))
+                        for theta = (* 2 pi (1- (random 2.0)))
+                        collect (list (* r (cos theta)) (* r (sin theta))))))
+      (with-present-to-file (plot out-path plot
+                                  :margin 20)
+        (add-plot-data plot 'observation-plane points
+                       :pane-type '2d-histogram-pane
+                       :color (make-linear-color-mapper +white+ +胭脂+))
+        (set-xy-bounding-box plot -1.0 1.0 -1.0 1.0)))
+
+    out-path
+  #+end_src
+
+  #+RESULTS: 2d-histogram-pane
+  [[file:./demo-img/2d-histogram-pane-demo.png]]
+
+  NOTE: the color map function is quite plain, I need to make
+  this more easier to use... 
 
 * Work in Progress
 Here are some little developing memos about GURAFU:
