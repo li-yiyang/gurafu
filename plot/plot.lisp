@@ -104,7 +104,8 @@
   ((%x-min :initform -1 :initarg :x-min)
    (%x-max :initform 1  :initarg :x-max)
    (%y-min :initform 1  :initarg :y-min)
-   (%y-max :initform 1  :initarg :y-max))
+   (%y-max :initform 1  :initarg :y-max)
+   (%background-color :initform *background-color* :initarg :background-color))
   (:documentation
    "This is the basic plot holder to show a plot.
 
@@ -173,3 +174,10 @@ The `plot' is a collection of `plot-pane' which draws the "))
 
 (defmethod get-plot-pane ((plot plot) name)  
   (gethash name (get-component plot)))
+
+;; ========== present :before ==========
+
+(defmethod present :before ((plot plot))
+  (with-slots (%background-color) plot
+    (draw-rect plot 0.0 0.0 1.0 1.0
+               :color %background-color)))
