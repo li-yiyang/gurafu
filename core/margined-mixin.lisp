@@ -74,7 +74,7 @@ Return values are left, right, bottom, top of stream margin. "))
       (values (- left   %margin-left)
               (+ right  %margin-right)
               (+ bottom %margin-bottom)
-              (+ top    %margin-top)))))
+              (- top    %margin-top)))))
 
 ;; ========== set-stream-bounding-box ==========
 

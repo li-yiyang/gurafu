@@ -27,9 +27,10 @@
     (flet ((precise (x)
              (format nil (format nil "~~,~df" %tick-precisition) x)))
       (let* ((offset (+ %tick-padding %tick-font-size))
-             (left-offset (max offset
-                               (draw-text-size plot (precise %y-max))
-                               (draw-text-size plot (precise %y-min)))))
+             (left-offset (+ %tick-padding
+                             (max %tick-font-size
+                                  (draw-text-size plot (precise %y-max))
+                                  (draw-text-size plot (precise %y-min))))))
         (call-next-method plot
                           (+ left left-offset) (+ right offset)
                           (+ bottom offset) (+ top offset))))))
