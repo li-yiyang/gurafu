@@ -8,31 +8,31 @@
 ;; except for `+white+' and `+black+', since they are
 ;; in high saturation, which is quite ugly, though...
 
-(defconstant +white+
+(defparameter +white+
   '(1.0 1.0 1.0)
   "GURAFU white color. ")
 
-(defconstant +black+
+(defparameter +black+
   '(0.0 0.0 0.0)
   "GURAFU black color. ")
 
-(defconstant +red+
+(defparameter +red+
   '(1.0 0.0 0.0)
   "GURAFU red color. ")
 
-(defconstant +green+
+(defparameter +green+
   '(0.0 1.0 0.0)
   "GURAFU green color. ")
 
-(defconstant +blue+
+(defparameter +blue+
   '(0.0 0.0 1.0)
   "GURAFU blue color. ")
 
-(defconstant +yellow+
+(defparameter +yellow+
   '(1.0 1.0 0.0)
   "GURAFU yellow color. ")
 
-(defconstant +gray+
+(defparameter +gray+
   '(0.1 0.1 0.1)
   "GURAFU gray color. ")
 
