@@ -68,16 +68,27 @@ which is quite low-level... Not recommanded. "))
 (defmethod present (obj)
   (declare (ignore obj)))
 
+;; ========== draw-present ==========
+
+(defun draw-present (obj left right bottom top)
+  "Present `obj' on coordinates. "
+  (set-stream-bounding-box obj left right bottom top)
+  (present obj))
+
 ;; ========== with-present-to-file ==========
 
-(defmacro with-present-to-file ((var file type &rest init-args) &body body)
+(defmacro with-present-to-file ((var type &rest init-args)
+                                (file &key (width 400) (height 400)
+                                        (backend :opticl) (colorspace :8-bit-rgb))
+                                &body body)
   "Dirty quick presentations. "
-  `(let* ((width 400)
-          (height 400)
-          (*default-backend* (make-backend :opticl :width width :height height))
+  `(let* ((*default-backend* (make-backend ,backend
+                                           :width  ,width
+                                           :height ,height
+                                           :colorspace ,colorspace))
           (,var (make-instance ',type ,@init-args)))
+     (set-stream-bounding-box ,var 0 ,width ,height 0)
      ,@body
-     (set-stream-bounding-box ,var 0 width height 0)
      (present ,var)
      (output! *default-backend* ,file)))
 
@@ -248,12 +259,12 @@ which is quite low-level... Not recommanded. "))
            (x2 (+ (coord left x2 right) offx))
            (y2 (+ (coord top  y2 bottom) offy)))
       (draw-rect! (slot-value obj '%backend)
-                  x1 y1 x2 y2
+                  (min x1 x2) (min y1 y2) (max x1 x2) (max y1 y2)
+                  :fill-color fill-color
+                  :fill? fill?
                   :line-style line-style
                   :pen-width pen-width
-                  :color color
-                  :fill? fill?
-                  :fill-color fill-color))))
+                  :color color))))
 
 (defmethod draw-line ((obj base-presentation) x1 y1 x2 y2
                       &key (color *foreground-color*)

@@ -282,8 +282,9 @@ if fails to find, return `*opticl-default-font*'. "
 
     ;; fill the rectangle
     (when fill?
-      (apply #'fill-rectangle (slot-value opticl '%opticl-image)
-             v1 u1 v2 u2 (rgb-color! opticl fill-color)))
+      (with-slots (%opticl-image) opticl
+        (fill-rectangle* %opticl-image v1 u1 v2 u2
+                         (rgb-color! opticl fill-color))))
 
     ;; draw boundary
     (draw-line! opticl u1 v1 u1 v2
@@ -531,7 +532,10 @@ To draw a char:
                                :top-left)
                               (list u v))
                              ((:center
-                               :horizontal-center
+                               :centered)
+                              (list (- u (truncate width 2))
+                                    (- v (truncate height 2))))
+                             ((:horizontal-center
                                :top-center)
                               (list (- u (truncate width 2)) v))
                              ((:vertical-center

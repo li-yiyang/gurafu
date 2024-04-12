@@ -36,9 +36,14 @@ The component will be append to the end of `%components-weights'. "))
     ;; register components to the end of `%components-weights'
     (setf %components-weights
           (nconc %components-weights (list (cons name weights))))
-    
+
     ;; add components to the `%components'
-    (setf (gethash name %components) component)))
+    (setf (gethash name %components) component))
+
+  ;; update stream-bounding-box to reorder compoents
+  (multiple-value-bind (left right bottom top)
+      (stream-bounding-box stream)
+    (set-stream-bounding-box stream left right bottom top)))
 
 ;; ========== loop-components ==========
 
@@ -69,6 +74,29 @@ The `component-name' can be mapped to component in `%components' as key;
 The `u-weight', `v-weight' is the stacked position for the compoent;
 The `w-weight', `h-weight' is the stacked size for the compoent. "))
 
+(defmethod add-component
+    ((stream layout-presentation) name component &rest weights)
+  (with-slots (%components %components-weights) stream
+    ;; register components to the end of `%components-weights'
+    (setf %components-weights
+          (nconc %components-weights (list (cons name weights))))
+
+    ;; add components to the `%components'
+    (setf (gethash name %components) component))
+
+  ;; update stream-bounding-box to reorder compoents
+  (multiple-value-bind (left right bottom top)
+      (stream-box stream)
+    (destructuring-bind (u-w v-w w-w h-w) weights
+      (let* ((width (- right left))
+             (height (- bottom top))
+             
+             (ul (truncate (+ (* u-w width)  left)))
+             (vt (truncate (+ (* v-w height) top)))
+             (ur (truncate (+ (* w-w width)  ul)))
+             (vb (truncate (+ (* h-w height) vt))))
+        (set-stream-bounding-box component ul ur vb vt)))))
+
 (defmethod add-component :before
     ((stream stack-layout-presentation) name component &rest weights)
   (declare (ignore name component))
@@ -77,7 +105,7 @@ The `w-weight', `h-weight' is the stacked size for the compoent. "))
                    stream weights))))
 
 (defmethod set-stream-bounding-box :after
-    ((stream stack-layout-presentation) lfet right bottom top)
+    ((stream stack-layout-presentation) left right bottom top)
   (multiple-value-bind (left right bottom top)
       (stream-box stream)
     (let ((width (- right left))

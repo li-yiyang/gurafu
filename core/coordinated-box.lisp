@@ -43,6 +43,30 @@ Return values are `%uv-left', `%uv-right', `%uv-bottom' and `%uv-right'. "))
   (with-slots (%uv-left %uv-right %uv-bottom %uv-top) box
     (values %uv-left %uv-right %uv-bottom %uv-top)))
 
+;; ========== stream-box-width ==========
+
+(defgeneric stream-box-width (stream)
+  (:documentation
+   "Get the width of `stream' box.
+
+Return values are `width'. "))
+
+(defmethod stream-box-width ((box coordinated-box))
+  (with-slots (%uv-left %uv-right) box
+    (- %uv-right %uv-left)))
+
+;; ========== stream-box-height ==========
+
+(defgeneric stream-box-height (stream)
+  (:documentation
+   "Get the height of `stream' box.
+
+Return values are `height'. "))
+
+(defmethod stream-box-height ((box coordinated-box))
+  (with-slots (%uv-bottom %uv-top) box
+    (- %uv-bottom %uv-top)))
+
 ;; ========== set-stream-box ==========
 
 (defgeneric set-stream-box (stream left right bottom top)
