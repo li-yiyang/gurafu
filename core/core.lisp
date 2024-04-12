@@ -81,14 +81,6 @@
 
    ;; define-presentation
    #:define-presentation
-
-   ;; plot
-   #:basic-plot-pane
-   #:line-plot-pane
-   #:plot
-   #:add-plot-pane
-   #:add-plot-data
-   #:get-plot-pane
    ))
 
 (in-package :gurafu/core)

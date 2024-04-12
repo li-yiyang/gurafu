@@ -32,16 +32,14 @@ You could just try:
   (with-present-to-file
       (plot plot :margin 10)
       (out-path :width 400 :height 400)
-    (add-plot-data plot 'sin
-                   (loop for x from -10.0 upto 10.0 by 0.1
-                         collect (list x (sin x)))
-                   :pane-type 'line-plot-pane
-                   :color +yellow+)
-    (add-plot-data plot 'sqaure
-                   (loop for x from -10.0 upto 10.0 by 0.1
-                         collect (list x (cos x)))
-                   :pane-type 'line-plot-pane
-                   :color +green+))
+    (add-plot-data plot
+        (line-plot-pane sin :color +yellow+)
+      (loop for x from -10.0 upto 10.0 by 0.1
+            collect (list x (sin x))))
+    (add-plot-data plot
+        (line-plot-pane cos :color +green+)
+      (loop for x from -10.0 upto 10.0 by 0.1
+            collect (list x (cos x)))))
 
   out-path
 #+end_src
@@ -63,13 +61,12 @@ Also, you may try some more plot pane types:
     (with-present-to-file
         (plot plot :margin 10)
         (out-path :width 400 :height 400)
-      (add-plot-data plot 'sin
-                     (with-open-file (dat dat-path)
-                       (loop for line = (read-line dat nil nil)
-                             while line
-                             collect (parse-integer line)))
-                     :pane-type 'histogram-pane
-                     :color +赤+))
+      (add-plot-data plot
+          (histogram-pane sin :color +赤+)
+        (with-open-file (dat dat-path)
+          (loop for line = (read-line dat nil nil)
+                while line
+                collect (parse-integer line)))))
 
     out-path
   #+end_src
@@ -89,13 +86,13 @@ Also, you may try some more plot pane types:
     (with-present-to-file
         (plot plot :margin 20)
         (out-path :width 400 :height 400)
-      (add-plot-data plot 'grid
-                     (loop for y from -10 upto 10 by 0.5
-                           collect (loop for x from -10 upto 10 by 0.5
-                                         collect (sin (sqrt (+ (* x x) (* y y))))))
-                     :pane-type '2d-grid-pane
-                     :color (make-linear-color-mapper +white+ +桃红+))
+      (add-plot-data plot
+          (2d-grid-pane grid :color (make-linear-color-mapper +white+ +桃红+))
+        (loop for y from -10 upto 10 by 0.5
+              collect (loop for x from -10 upto 10 by 0.5
+                            collect (sin (sqrt (+ (* x x) (* y y)))))))
       (set-xy-bounding-box plot -10.0 10.0 -10.0 10.0))
+
     out-path
   #+end_src
 
@@ -108,17 +105,16 @@ Also, you may try some more plot pane types:
   #+begin_src lisp :results file :exports both
     (in-package :gurafu)
 
-    (let ((points (loop for i below 10000
-                        for r = (+ 0.5 (random 0.5))
-                        for theta = (* 2 pi (1- (random 2.0)))
-                        collect (list (* r (cos theta)) (* r (sin theta))))))
-      (with-present-to-file
-          (plot plot :margin 20)
-          (out-path :width 400 :height 400)
-        (add-plot-data plot 'observation-plane points
-                       :pane-type '2d-histogram-pane
-                       :color (make-linear-color-mapper +white+ +胭脂+))
-        (set-xy-bounding-box plot -1.0 1.0 -1.0 1.0)))
+    (with-present-to-file
+        (plot plot :margin 20)
+        (out-path :width 400 :height 400)
+      (add-plot-data plot
+          (2d-histogram-pane arc :color (make-linear-color-mapper +white+ +胭脂+))
+        (loop for i below 10000
+              for r = (+ 0.5 (random 0.5))
+              for theta = (* 2 pi (1- (random 2.0)))
+              collect (list (* r (cos theta)) (* r (sin theta)))))
+      (set-xy-bounding-box plot -1.0 1.0 -1.0 1.0))
 
     out-path
   #+end_src

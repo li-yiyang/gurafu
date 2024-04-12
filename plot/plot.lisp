@@ -154,18 +154,11 @@ The `plot' is a collection of `plot-pane' which draws the "))
 
 ;; ========== add-plot-data ==========
 
-(defgeneric add-plot-data (plot name data &key &allow-other-keys)
-  (:documentation
-   "Add a `data' to `plot' as a plot-pane named `name'. "))
-
-(defmethod add-plot-data ((plot plot) name data
-                          &key (pane-type 'line-plot-pane)
-                            (color *foreground-color*)
-                          &allow-other-keys)
-  (let ((pane (make-instance pane-type
-                             :color color
-                             :plot-data data)))
-    (add-plot-pane plot name pane)))
+(defmacro add-plot-data (plot (type name &rest init-args) &body data)
+  "Add a `data' to `plot' as a plot-pane named `name'. "
+  `(add-plot-pane ,plot ',name
+                  (make-instance ',type :plot-data (progn ,@data)
+                                 ,@init-args)))
 
 ;; ========== get-plot-pane ==========
 

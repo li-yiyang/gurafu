@@ -11,7 +11,9 @@
    
    #:plot
    
-   #:rescale-plot-pane)
+   #:rescale-plot-pane
+   #:add-plot-pane
+   #:add-plot-data)
   (:documentation
    "The main plot defination for GURAFU. "))
 
