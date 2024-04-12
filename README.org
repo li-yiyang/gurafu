@@ -158,6 +158,10 @@ Here are some little developing memos about GURAFU:
 
   Although currently backend output only =opticl= is done...
 + =opticl= backend use BDF font (UNIFONT) for =draw-char!=
++ better color map function
++ more graph styles
++ make GURAFU more easy to use
++ get it a good documentation
 
 ** Naming Conventions
 + GURAFU class slot variables should be prefixed with =%=,

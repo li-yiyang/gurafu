@@ -6,10 +6,7 @@
                                    (max-color *foreground-color*))
   "Make a color mapper function map unit value between 0 and 1 to min and max color.
 Return a function. "
-  (lambda (w)
-    (let ((w (min 1.0 (max w 0.0))))
-      (mapcar (lambda (min max) (+ (* w max) (* (- 1 w) min)))
-              min-color max-color))))
+  (linear-color-map min-color max-color))
 
 ;; ========== 2d-grid-pane ==========
 

@@ -9,6 +9,7 @@
    :with-gensyms)
   (:export
    ;; colors
+   #:linear-color-map
    #:+white+
    #:+black+
    #:+red+

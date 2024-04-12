@@ -10,6 +10,30 @@
   (loop for i from 2 upto (length hex) by 2
         collect (float (/ (parse-integer (subseq hex (- i 2) i) :radix 16) 255))))
 
+;; ========== linear-color-map ==========
+
+(defmacro linear-color-map (&rest colors)
+  "Make a linear color map function.
+Return a lambda function to map unit weight (0 to 1) to colors. "
+  (loop with weight = 0.0
+        with w = (float (/ 1.0 (1- (length colors))))
+        with c-vars = (loop for i below (length colors)
+                            collect (gensym "C"))
+        
+        for (c1 c2) on c-vars
+        while c2
+        
+        collect `((< w ,(incf weight w)) (+ (* (- 1 w) ,c1) (* w ,c2)))
+          into condition
+
+        finally (return `(lambda (w)
+                           (let ((w (min 1.0 (max w 0.0))))
+                             (mapcar (lambda ,c-vars
+                                       (cond ((< w 0) ,(first c-vars))
+                                             ,@condition
+                                             (t ,(car (last c-vars)))))
+                                     ,@colors))))))
+
 ;; ========== chinese traditional colors ==========
 ;; You could refer to Wikipedia for a subset of chinese
 ;; traditional colors I use here. More colors should
