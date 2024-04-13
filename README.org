@@ -62,7 +62,7 @@ Also, you may try some more plot pane types:
         (plot plot :margin 10)
         (out-path :width 400 :height 400)
       (add-plot-data plot
-          (histogram-pane sin :color +赤+)
+          (histogram-pane sin :color +莲红+)
         (with-open-file (dat dat-path)
           (loop for line = (read-line dat nil nil)
                 while line
@@ -87,7 +87,7 @@ Also, you may try some more plot pane types:
         (plot plot :margin 20)
         (out-path :width 400 :height 400)
       (add-plot-data plot
-          (2d-grid-pane grid :color (make-linear-color-mapper +white+ +桃红+))
+          (2d-grid-pane grid :color (make-linear-color-mapper +white+ +银红+))
         (loop for y from -10 upto 10 by 0.5
               collect (loop for x from -10 upto 10 by 0.5
                             collect (sin (sqrt (+ (* x x) (* y y)))))))
@@ -109,7 +109,7 @@ Also, you may try some more plot pane types:
         (plot plot :margin 20)
         (out-path :width 400 :height 400)
       (add-plot-data plot
-          (2d-histogram-pane arc :color (make-linear-color-mapper +white+ +胭脂+))
+          (2d-histogram-pane arc :color (make-linear-color-mapper +white+ +翠蓝+))
         (loop for i below 10000
               for r = (+ 0.5 (random 0.5))
               for theta = (* 2 pi (1- (random 2.0)))
