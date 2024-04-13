@@ -149,7 +149,8 @@ Here are some little developing memos about GURAFU:
   example =*foreground-color*=, =*background-color*=;
 
 * Historical Codes
-This codes maybe outdated, so may not work.
+This codes maybe outdated, so may not work. Or these codes need
+some patches to make it work, so may not recommanded. 
 
 I should update them later:
 
@@ -191,3 +192,64 @@ and try the following code:
 You could see the result as below:
 
 [[./demo-img/first-usable-demo.png]]
+
+I add some Chinese traditional colors in 《天宫开物》 (according to
+《染作江南春水色》), you could see as below: 
+
+#+name: tiangongkaiwu-colors
+#+headers: :var out-path="./demo-img/tiangongkaiwu-colors-demo.png"
+#+begin_src lisp :results file :exports both :eval no
+  (define-presentation color-box-present (base-presentation
+                                          margined-mixin)
+    ((%color :initform *foreground-color*
+             :initarg :color)
+     (%label :initform ""
+             :initarg :label))
+    (:draw (%color %label)
+           (draw-rect self 0.0 1.0 1.0 0.0
+                      :color %color
+                      :fill? t
+                      :fill-color %color)
+           (draw-text self 0.5 0.5 %label
+                      :text-align :centered
+                      :line-width (stream-box-width self)))
+    (:documentation
+     "Present a color box. "))
+
+  (defun map-present-list (list map-fn &optional (layout :horizontal))
+    (if (listp list)
+        (let ((layout (ecase layout
+                        (:horizontal (make-instance 'horizontal-layout-presentation))
+                        (:vertical   (make-instance 'vertical-layout-presentation))))
+              (child-layout (if (eq layout :horizontal) :vertical :horizontal)))
+          (loop with weight = (/ 1.0 (length list))
+                for elem in list              
+                do (add-component layout
+                                  (gensym "LIST")
+                                  (map-present-list elem map-fn child-layout)
+                                  weight)
+                finally (return layout)))
+        (funcall map-fn list)))
+
+  (with-present-to-file
+      (plot base-presentation)
+      (out-path :width 800 :height 800)
+    (setf plot (map-present-list
+                '((+大红+ +莲红+ +桃红+ +银红+)
+                  (+水红+ +木红+ +鹅黄+ +紫+)
+                  (+天青+ +葡萄青+ +蛋青+ +翠蓝+)
+                  (+天蓝+ +月白+ +草白+ +毛青+)
+                  (+大红官绿+ +豆绿+ +油绿+ +藕色+)
+                  (+茶褐+ +包头青+))
+                (lambda (color-name)
+                  (make-instance 'color-box-present
+                                 :margin 5
+                                 :label (format nil "~a" color-name)
+                                 :color (symbol-value color-name)))))
+    (set-stream-bounding-box plot 0 800 800 0))
+
+  out-path
+#+end_src
+
+#+RESULTS: tiangongkaiwu-colors
+[[file:./demo-img/tiangongkaiwu-colors-demo.png]]

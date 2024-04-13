@@ -75,7 +75,7 @@ The `u-weight', `v-weight' is the stacked position for the compoent;
 The `w-weight', `h-weight' is the stacked size for the compoent. "))
 
 (defmethod add-component
-    ((stream layout-presentation) name component &rest weights)
+    ((stream stack-layout-presentation) name component &rest weights)
   (with-slots (%components %components-weights) stream
     ;; register components to the end of `%components-weights'
     (setf %components-weights
