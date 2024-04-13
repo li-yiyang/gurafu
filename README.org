@@ -198,19 +198,22 @@ I add some Chinese traditional colors in 《天宫开物》 (according to
 
 #+name: tiangongkaiwu-colors
 #+headers: :var out-path="./demo-img/tiangongkaiwu-colors-demo.png"
-#+begin_src lisp :results file :exports both :eval no
+#+begin_src lisp :results file :exports both
   (define-presentation color-box-present (base-presentation
                                           margined-mixin)
     ((%color :initform *foreground-color*
              :initarg :color)
+     (%label-color :initform *foreground-color*
+                   :initarg :label-color)
      (%label :initform ""
              :initarg :label))
-    (:draw (%color %label)
-           (draw-rect self 0.0 1.0 1.0 0.0
+    (:draw (%color %label %label-color)
+           (draw-rect self 0.0 1.0 1.0 0.0                      
                       :color %color
                       :fill? t
                       :fill-color %color)
            (draw-text self 0.5 0.5 %label
+                      :color %label-color
                       :text-align :centered
                       :line-width (stream-box-width self)))
     (:documentation
@@ -243,6 +246,7 @@ I add some Chinese traditional colors in 《天宫开物》 (according to
                   (+茶褐+ +包头青+))
                 (lambda (color-name)
                   (make-instance 'color-box-present
+                                 :label-color +white+
                                  :margin 5
                                  :label (format nil "~a" color-name)
                                  :color (symbol-value color-name)))))
