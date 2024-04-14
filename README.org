@@ -26,7 +26,7 @@ You could just try:
 
 #+name: first-usable-plot-sin-cos-demo
 #+header: :var out-path="./demo-img/first-usable-plot-sin-cos-demo.png"
-#+begin_src lisp :results file
+#+begin_src lisp :results file :exports both
   (in-package :gurafu)
 
   (with-present-to-file
