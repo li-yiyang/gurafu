@@ -90,3 +90,15 @@ Return values are left, right, bottom, top of stream margin. "))
                           (- bottom %margin-bottom)
                           (+ top    %margin-top))
         (error (format nil "No enough space for margined stream box. ")))))
+
+;; ========== stream-bounding-box-height ==========
+
+(defmethod stream-bounding-box-height :around
+    ((stream margined-mixin))
+  (with-slots (%margin-bottom %margin-top) stream
+    (+ %margin-bottom %margin-top (call-next-method))))
+
+(defmethod stream-bounding-box-width :around
+    ((stream margined-mixin))
+  (with-slots (%margin-left %margin-right) stream
+    (+ %margin-left %margin-right (call-next-method))))

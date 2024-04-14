@@ -3,8 +3,7 @@
 ;; ========== layout-presentation ==========
 
 (defclass layout-presentation (base-presentation)
-  ((%components         :initform (make-hash-table :test 'equal)
-                        :reader get-component)
+  ((%components         :initform (make-hash-table :test 'equal))
    (%components-weights :initform ()))
   (:documentation
    "A simple layout mixin.
@@ -23,6 +22,15 @@ and apply `present' on each component. "))
 (defmethod present ((stream layout-presentation))
   (maphash-values #'present (slot-value stream '%components)))
 
+;; ========== get-component ==========
+
+(defgeneric get-component (stream name)
+  (:documentation
+   "Get the component of `stream' with `name'. "))
+
+(defmethod get-component ((stream layout-presentation) name)
+  (gethash name (slot-value stream '%components-weights)))
+
 ;; ========== add-component ==========
 
 (defgeneric add-component (stream name component &rest weights)
@@ -40,10 +48,27 @@ The component will be append to the end of `%components-weights'. "))
     ;; add components to the `%components'
     (setf (gethash name %components) component))
 
-  ;; update stream-bounding-box to reorder compoents
-  (multiple-value-bind (left right bottom top)
-      (stream-bounding-box stream)
-    (set-stream-bounding-box stream left right bottom top)))
+  (apply #'rescale-component stream name weights))
+
+;; ========== rescale-component ==========
+
+(defgeneric rescale-component (layout name &rest weights)
+  (:documentation
+   "Rescale `layout' component with `name' to new `weights'. "))
+
+(defmethod rescale-component ((layout layout-presentation) name &rest weights)
+  (with-slots (%components %components-weights) layout
+    (cond ((assoc name %components-weights)
+           
+           ;; update components weights
+           (setf (cdr (assoc name %components-weights)) weights)
+
+           ;; reset the stream-bounding-box
+           (multiple-value-bind (left right bottom top)
+               (stream-bounding-box layout)
+             (set-stream-bounding-box layout left right bottom top)))
+          (t (error (format nil "~a does not have component with name ~a"
+                            layout name))))))
 
 ;; ========== loop-components ==========
 
@@ -73,29 +98,6 @@ would be like:
 The `component-name' can be mapped to component in `%components' as key;
 The `u-weight', `v-weight' is the stacked position for the compoent;
 The `w-weight', `h-weight' is the stacked size for the compoent. "))
-
-(defmethod add-component
-    ((stream stack-layout-presentation) name component &rest weights)
-  (with-slots (%components %components-weights) stream
-    ;; register components to the end of `%components-weights'
-    (setf %components-weights
-          (nconc %components-weights (list (cons name weights))))
-
-    ;; add components to the `%components'
-    (setf (gethash name %components) component))
-
-  ;; update stream-bounding-box to reorder compoents
-  (multiple-value-bind (left right bottom top)
-      (stream-box stream)
-    (destructuring-bind (u-w v-w w-w h-w) weights
-      (let* ((width (- right left))
-             (height (- bottom top))
-             
-             (ul (truncate (+ (* u-w width)  left)))
-             (vt (truncate (+ (* v-w height) top)))
-             (ur (truncate (+ (* w-w width)  ul)))
-             (vb (truncate (+ (* h-w height) vt))))
-        (set-stream-bounding-box component ul ur vb vt)))))
 
 (defmethod add-component :before
     ((stream stack-layout-presentation) name component &rest weights)

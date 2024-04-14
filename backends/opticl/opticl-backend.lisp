@@ -122,10 +122,11 @@ if fails to find, return `*opticl-default-font*'. "
 ;; ========== set-stream-height! ==========
 
 (flet ((opticl-resize (opticl)
-         (setf (slot-value opticl '%opticl-image)
-               (resize-image %opticl-image
-                             (stream-height! opticl)
-                             (stream-width!  opticl)))))
+         (with-slots (%opticl-image) opticl
+           (setf %opticl-image
+                 (resize-image %opticl-image
+                               (stream-height! opticl)
+                               (stream-width!  opticl))))))
   (defmethod (setf stream-width!) :after (width (opticl opticl-backend))
     (declare (ignore width))
     (opticl-resize opticl))

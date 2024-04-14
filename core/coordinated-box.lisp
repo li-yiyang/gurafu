@@ -93,6 +93,24 @@ Return values are outer edge left, right, bottom, top of the uv box. "))
 (defmethod stream-bounding-box ((box coordinated-box))
   (stream-box box))
 
+;; ========== stream-bounding-box-height ==========
+
+(defgeneric stream-bounding-box-height (stream)
+  (:documentation
+   "Get the height of `stream' bounding box. "))
+
+(defmethod stream-bounding-box-height ((stream coordinated-box))
+  (stream-box stream))
+
+;; ========== stream-bounding-box-width ==========
+
+(defgeneric stream-bounding-box-width (stream)
+  (:documentation
+   "Get the width of `stream' bounding box. "))
+
+(defmethod stream-bounding-box-width (stream)
+  (stream-box-width stream))
+
 ;; ========== set-stream-bounding-box ==========
 
 (defgeneric set-stream-bounding-box (stream left right bottom top)
