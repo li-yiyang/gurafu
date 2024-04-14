@@ -160,7 +160,7 @@ The `weight' is the vertical weight for the component. "))
     ((stream horizontal-layout-presentation) name component &rest weights)
   (declare (ignore name component))
   (unless (= (length weights) 1)
-    (error (format nil "Horizontal ~a needs 2 weights, got ~a only. "
+    (error (format nil "Horizontal ~a needs 1 weights, got ~a only. "
                    stream weights))))
 
 (defmethod set-stream-bounding-box :after
