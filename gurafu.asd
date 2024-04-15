@@ -1,6 +1,7 @@
 (defsystem #:gurafu
   :author ("凉凉")
   :version "0"
+  :license "MIT"
   :description "This is a package that deals with ploting."
   :depends-on (:gurafu/plot)
   :components ((:file "package")))
@@ -8,6 +9,7 @@
 (defsystem #:gurafu/plot
   :author ("凉凉")
   :version "0"
+  :license "MIT"
   :description "This is a package that draw the plot on GURAFU. "
   :pathname "plot"
   :depends-on (:gurafu/core)
@@ -22,6 +24,7 @@
 (defsystem #:gurafu/protocol
   :author ("凉凉")
   :version "0"
+  :license "MIT"
   :description
   "This part defines how the GURAFU backend protocol
 should be implemented. All the GURAFU backend should
@@ -38,6 +41,7 @@ follow the behavior defined in `gurafu/protocol'. "
 (defsystem #:gurafu/core
   :author ("凉凉")
   :version "0"
+  :license "MIT"
   :description "This is the core GURAFU package. "
   :depends-on (:alexandria
                :gurafu/protocol
@@ -56,6 +60,7 @@ follow the behavior defined in `gurafu/protocol'. "
 (defsystem #:gurafu/backends/opticl
   :author ("凉凉")
   :version "0"
+  :license "MIT"
   :description "The GURAFU output backend with opticl."
   :depends-on (:gurafu/protocol
                :opticl               

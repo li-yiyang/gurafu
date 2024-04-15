@@ -46,8 +46,12 @@
    #:draw-line
 
    #:stream-box
+   #:stream-box-width
+   #:stream-box-height
    #:set-stream-box
    #:stream-bounding-box
+   #:stream-bounding-box-width
+   #:stream-bounding-box-height
    #:set-stream-bounding-box
    
    ;; presentation
