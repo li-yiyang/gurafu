@@ -82,8 +82,8 @@ Return values are left, right, bottom, top of stream margin. "))
     ((stream margined-mixin) left right bottom top)
   (with-slots (%margin-left %margin-right %margin-bottom %margin-top)
       stream
-    (if (and (> (- right left) (+ %margin-left   %margin-right))
-             (> (- bottom top) (+ %margin-bottom %margin-top)))
+    (if (and (>= (- right left) (+ %margin-left   %margin-right))
+             (>= (- bottom top) (+ %margin-bottom %margin-top)))
         (call-next-method stream
                           (+ left   %margin-left)
                           (- right  %margin-right)

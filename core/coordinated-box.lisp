@@ -31,6 +31,20 @@
   (:documentation
    "A box dealing with screen "))
 
+;; ========== initialize-instance ==========
+
+(defmethod initialize-instance :after
+    ((stream coordinated-box)
+     &key (height 100 height-set?) (width 100 width-set?)
+       (right 100 right-set?) (bottom 100 bottom-set?))
+  (declare (ignore right bottom))
+  (with-slots (%uv-left %uv-right %uv-bottom %uv-top) stream
+    (when (and (not right-set?) width-set?)
+      (setf %uv-right (+ %uv-left width)))
+    
+    (when (and (not bottom-set?) height-set?)
+      (setf %uv-bottom (+ %uv-top height)))))
+
 ;; ========== stream-box ==========
 
 (defgeneric stream-box (stream)
@@ -123,3 +137,15 @@ Return values are the setted coordinates lfet, right, bottom and top. "))
     ((box coordinated-box) left right bottom top)
   (set-stream-box box left right bottom top))
 
+;; ========== auto-enlarge-backend-mixin ==========
+
+(defclass auto-enlarge-backend-mixin ()
+  ()
+  (:documentation
+   ""))
+
+(defmethod set-stream-box :after
+    ((stream auto-enlarge-backend-mixin) left right bottom top)
+  (with-slots (%uv-right %uv-bottom %backend) stream
+    (setf (stream-height! %backend) (max (stream-height! %backend) %uv-bottom)
+          (stream-width!  %backend) (max (stream-width!  %backend) %uv-right))))
