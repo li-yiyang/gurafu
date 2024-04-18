@@ -142,10 +142,16 @@ Return values are the setted coordinates lfet, right, bottom and top. "))
 (defclass auto-enlarge-backend-mixin ()
   ()
   (:documentation
-   ""))
+   "Every time rescaling the stream box size,
+auto enlarge `%backend' size if possible. "))
 
 (defmethod set-stream-box :after
     ((stream auto-enlarge-backend-mixin) left right bottom top)
-  (with-slots (%uv-right %uv-bottom %backend) stream
-    (setf (stream-height! %backend) (max (stream-height! %backend) %uv-bottom)
-          (stream-width!  %backend) (max (stream-width!  %backend) %uv-right))))
+  (with-slots (%backend) stream
+    (multiple-value-bind (left right bottom top)
+        (stream-bounding-box stream)
+      (declare (ignore left top))
+      (when (< (stream-height! %backend) bottom)
+        (setf (stream-height! %backend) bottom))
+      (when (< (stream-width! %backend) right)
+        (setf (stream-height! %backend) right)))))

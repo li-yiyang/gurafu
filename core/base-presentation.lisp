@@ -2,6 +2,9 @@
 
 ;; ========== helper functions ==========
 
+;; ========== +gurafu-backends+ ==========
+;; Should regist all the GURAFU backend here...
+
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defparameter +gurafu-backends+
     '(((:opticl-backend :opticl)
@@ -19,7 +22,7 @@
                                       :height ,height :width ,width)))))
 
 ;; by default, the `*default-backend*' should be a small `:opticl' backend
-;; the size would be resized when using it. 
+;; the size should be resized when using it. 
 (defparameter *default-backend*
   (make-backend :opticl :width 1 :height 1)
   "The default backend used for GURAFU plotting lib. ")
@@ -74,6 +77,14 @@ which is quite low-level... Not recommanded. "))
   "Present `obj' on coordinates. "
   (set-stream-bounding-box obj left right bottom top)
   (present obj))
+
+;; ========== with-present ==========
+
+(defmacro with-present ((var type &rest init-args) &body body)
+  "Quickly make a present, return present. "
+  `(let* ((,var (make-instance ',type ,@init-args)))
+     ,@body
+     ,var))
 
 ;; ========== with-present-to-file ==========
 

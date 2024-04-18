@@ -63,6 +63,7 @@
    ;; base-presentation
    #:+gurafu-backends+
    #:make-backend
+   #:with-present
    #:with-present-to-file
    
    #:*default-backends*
@@ -89,6 +90,8 @@
    #:stack-layout-presentation
    #:vertical-layout-presentation
    #:horizontal-layout-presentation
+   #:vertical-flow-layout-presentation
+   #:horizontal-flow-layout-presentation
    #:get-component
    #:add-component
    #:loop-components

@@ -1,5 +1,20 @@
 (in-package :gurafu/core)
 
+;; ========== README : about layout-presentation ==========
+;; The layout presentation class:
+;; 
+;; +--- layout-presentation
+;;   |  => stack-layout-presentation
+;;   |
+;;   +--- content-relative-layout-presentation
+;;        => vertical-layout-presentation
+;;        => horizontal-layout-presentation
+;;        => vertical-flow-layout-presentation
+;;        => horizontal-flow-layout-presentation
+;; 
+;; P.S. I should done this more neatly, though, current layout
+;; system is quite dummy and slow. Need rewrite later.
+
 ;; ========== layout-presentation ==========
 
 (defclass layout-presentation (base-presentation)
@@ -30,6 +45,13 @@ For `present' method, every time presenting the component of a
 and apply `present' on each component. "))
 
 ;; ========== layout-presentation ==========
+;; The `present' method for `layout-presentation'
+;; just present the `%components' respectively.
+;; 
+;; The component of `layout-presentation' should be
+;; reshaped with `rescale-component' when:
+;; + added to layout: `add-component'
+;; + reshape the layout: `set-stream-bounding-box'
 
 (defmethod present ((layout layout-presentation))
   (maphash-values #'present (slot-value layout '%components)))
@@ -46,6 +68,10 @@ and apply `present' on each component. "))
   (gethash name (slot-value layout '%components)))
 
 ;; ========== check-weights ==========
+;; Different `layout-presentation' type should have different
+;; weights for how the component is layouted.
+;; 
+;; Use `declaim-weights' to set the `layout-presentation'.
 
 (declaim (inline check-weights))
 
@@ -141,6 +167,9 @@ The component will be append to the end of `%components-weights'. "))
   (:documentation
    "That should be stacked presented.
 
+If the layout is stacked presented, the components of the layout
+would be draw one by one (the later added component are drawn on top).
+
 The `%components-weights' of `stack-layout-presentation' element
 would be like:
 
@@ -151,6 +180,25 @@ The `u-weight', `v-weight' is the stacked position for the compoent;
 The `w-weight', `h-weight' is the stacked size for the compoent. "))
 
 (declaim-weights stack-layout-presentation 4)
+
+;; ========== add-component ==========
+;; Could be able to use 0, 2, 4 weights.
+
+(defmethod add-component :around
+    ((stack stack-layout-presentation) name component &rest weights)
+  (let ((w-len (length weights)))
+    (multiple-value-bind (left right bottom top)
+        (stream-bounding-box component)
+      (ecase w-len
+        (0 (call-next-method stack name component
+                             0 0 (- right left) (- bottom top)))
+        (2 (call-next-method stack name component
+                             (first weights) (second weights)
+                             (- right left)  (- bottom top)))
+        (4 (call-next-method))))))
+
+;; ========== rescale-component ==========
+;; The rescale should relative to top-left.
 
 (defmethod rescale-component :after
     ((stack stack-layout-presentation) name &rest weights)
@@ -167,11 +215,9 @@ The `w-weight', `h-weight' is the stacked size for the compoent. "))
         (set-stream-bounding-box component ul ur vb vt)))))
 
 ;; ========== content-relative-layout-presentation ==========
-;; Develop Memo: currently, the `set-stream-bounding-box' will calculate
-;; the `%cursor-x' and `%cursor-y' repeatly, O(n^2) complexity, which
-;; might cause unnecessary time waste.
-;; 
-;; SHOULD FIX IT in the next code clean up.
+;; Develop Memo: the `set-stream-bounding-box' will not reset
+;; the `%cursor-x' and `%cursor-y' it would use
+;; `lazy-rescale-component' to rescale the each components.
 
 (defclass content-relative-layout-presentation (layout-presentation)
   ((%cursor-x :initform 0)
@@ -182,6 +228,7 @@ The `w-weight', `h-weight' is the stacked size for the compoent. "))
 The content, which would be remembered in `%cursor-x' and `%cursor-y'."))
 
 ;; ========== reset-content ==========
+;; Normally, this should move to top left.
 
 (declaim (inline reset-content))
 
@@ -195,6 +242,11 @@ The content, which would be remembered in `%cursor-x' and `%cursor-y'."))
           %cursor-y 0)))
 
 ;; ========== update-content-info ==========
+;; This would update cursor position `%cursor-x'
+;; and `%cursor-y' according to `weights' infomation.
+;; 
+;; Every subclass of `content-relative-layout-presentation'
+;; should give their own `update-content-info' method.
 
 (declaim (inline update-content-info))
 
@@ -203,6 +255,7 @@ The content, which would be remembered in `%cursor-x' and `%cursor-y'."))
    "Update `layout' content with `weights'. "))
 
 ;; ========== lazy-rescale-component ==========
+;; Rescale component respect to current cursor infomation.
 
 (declaim (inline lazy-rescale-component))
 
@@ -225,6 +278,10 @@ After `lazy-rescale-component', the content infomation would updated. "))
   (reset-content layout))
 
 ;; ========== rescale-component ==========
+;; Subclass of `content-relative-layout-presentation'
+;; should not define their own `rescale-component' method.
+;; 
+;; Write own `lazy-rescale-component' instead.
 
 (defmethod rescale-component :after
     ((layout content-relative-layout-presentation) name &rest weights)
@@ -244,7 +301,17 @@ After `lazy-rescale-component', the content infomation would updated. "))
 (defclass vertical-layout-presentation (content-relative-layout-presentation)
   ()
   (:documentation
-   ""))
+   "That should be presented verticlly.
+
+The `%components-weights' element would be like:
+
+  (component-name weight)
+
+The `weight' is the vertical weight for the component;
+
+  layout height * weight => height of component,
+  layout left/right      => left/right of component
+"))
 
 (declaim-weights vertical-layout-presentation 1)
 
@@ -270,7 +337,16 @@ After `lazy-rescale-component', the content infomation would updated. "))
 (defclass horizontal-layout-presentation (content-relative-layout-presentation)
   ()
   (:documentation
-   ""))
+   "That should be presented horizontally.
+
+The `%components-weights' element would be like:
+
+  (component-name weight)
+
+The `weight' is the horizontal weight for the component;
+
+  layout width * weight => width of component
+"))
 
 (declaim-weights horizontal-layout-presentation 1)
 
@@ -293,25 +369,42 @@ After `lazy-rescale-component', the content infomation would updated. "))
 
 ;; ========== flow-layout-presentation ==========
 
-(defclass flow-layout-presentation (content-relative-layout-presentation
-                                    auto-enlarge-backend-mixin)
+(defclass vertical-flow-layout-presentation (content-relative-layout-presentation
+                                             auto-enlarge-backend-mixin)
   ()
   (:documentation
-   ""))
+   "That should be presented vertically.
 
-(declaim-weights flow-layout-presentation 1)
+The `%components-weights' element would be like:
+
+  (component-name weight)
+
+The `weight' is the height of component.
+
+When using `add-component' and not given component height,
+the weight would be the component original height.
+
+When rescaling the `vertical-flow-layout-presentation',
+it would rescale all the components in ratio.
+"))
+
+(declaim-weights vertical-flow-layout-presentation 1)
+
+;; ========== add-component ==========
+;; Ensure the `add-component' getting the correct `weights'
 
 (defmethod add-component :around
-    ((flow flow-layout-presentation) name component &rest weights)
+    ((flow vertical-flow-layout-presentation) name component &rest weights)
   (let ((height (or (first weights) (stream-bounding-box-height component))))
     (call-next-method flow name component height)))
 
-(defmethod update-content-info ((flow flow-layout-presentation) weights)
+(defmethod update-content-info
+    ((flow vertical-flow-layout-presentation) weights)
   (let ((height (first weights)))
     (incf (slot-value flow '%cursor-y) height)))
 
 (defmethod lazy-rescale-component
-    ((flow flow-layout-presentation) name &rest weights)
+    ((flow vertical-flow-layout-presentation) name &rest weights)
   (multiple-value-bind (left right bottom top)
       (stream-box flow)
     (with-slots (%cursor-y) flow
@@ -328,3 +421,75 @@ After `lazy-rescale-component', the content infomation would updated. "))
               (set-stream-box flow
                               left (max c-right right) (max c-bottom bottom) top))
             (setf %cursor-y c-bottom)))))))
+
+;; ========== horizontal-flow-layout-presentation ==========
+
+(defclass horizontal-flow-layout-presentation (content-relative-layout-presentation
+                                               auto-enlarge-backend-mixin)
+  ()
+  (:documentation
+   "That should be presented vertically.
+
+The `%components-weights' element would be like:
+
+  (component-name weight)
+
+The `weight' is the width of component.
+
+When using `add-component' and not given component width,
+the weight would be the component original width.
+
+When rescaling the `horizontal-flow-layout-presentation',
+it would rescale all the components in ratio.
+"))
+
+(declaim-weights horizontal-flow-layout-presentation 1)
+
+(defmethod add-component :around
+    ((flow horizontal-flow-layout-presentation) name component &rest weights)
+  (let ((width (or (first weights) (stream-bounding-box-width component))))
+    (call-next-method flow name component width)))
+
+(defmethod update-content-info
+    ((flow horizontal-flow-layout-presentation) weights)
+  (let ((width (first weights)))
+    (incf (slot-value flow '%cursor-x) width)))
+
+(defmethod lazy-rescale-component
+    ((flow horizontal-flow-layout-presentation) name &rest weights)
+  (multiple-value-bind (left right bottom top)
+      (stream-box flow)
+    (with-slots (%cursor-x) flow
+      (let ((component (get-component flow name)))
+        (multiple-value-bind (c-left c-right c-bottom c-top)
+            (stream-bounding-box component)
+          (let* ((width    (first weights))
+                 (scale    (/ width (- c-right c-left)))
+                 (c-left   (+ left %cursor-x))
+                 (c-right  (+ c-left width))
+                 (c-bottom (+ c-top (truncate (* scale (- c-bottom c-top))))))
+            (set-stream-bounding-box component left c-right c-bottom c-top)
+            (when (or (> c-right right) (> c-bottom bottom))
+              (set-stream-box flow
+                              left (max c-right right) (max c-bottom bottom) top))
+            (setf %cursor-x c-right)))))))
+
+;; ========== layout-presentation ==========
+
+(defun get-layout-class (layout)
+  "Get the layout class name by giving `layout' keyword.
+
+Return values is the name of the layout presentation type. "
+  (case layout
+    ((:stack :stacked)
+     'stack-layout-presentation)
+    ((:flow :vertical-flow)
+     'vertical-flow-layout-presentation)
+    ((:horizontal-flow)
+     'horizontal-flow-layout-presentation)
+    ((:vertical :vertically)
+     'vertical-layout-presentation)
+    ((:horizontal :horizontally)
+     'horizontal-layout-presentation)
+    (otherwise
+     (error (format nil "~a is not a known layout. " layout)))))

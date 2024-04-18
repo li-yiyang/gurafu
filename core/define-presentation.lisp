@@ -109,6 +109,9 @@ Or the `options' should not have them all. "
                      ,@(generate-layout-bind present layout)))))))))
 
 ;; ========== define-presentation ==========
+;; NOTE: this should not be recommanded to use for now...
+;; The new layout-presentation system make the old
+;; define-presentation seemed to be broken.
 
 (defmacro define-presentation (name direct-superclass slots &rest options)
   "Feeling happy with higher level of defining a presentation object class.
@@ -124,7 +127,7 @@ Or the `options' should not have them all. "
     ;; this is higher-level about how to layout a presentation object
     (:components (slot-var-names)
       (component-name component-type . component-init-args))
-    (:layout :vertical|:horizontal|:stack
+    (:layout :vertical|:horizontal|:stack|:flow...|
       (component-name weight) ; specify the component weight
       component-name          ; the weight will be automatically calculated
       ))"

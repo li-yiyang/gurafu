@@ -56,6 +56,7 @@
    
    ;; presentation
    #:with-present-to-file
+   #:with-present
    #:define-presentation
    #:present
 
@@ -66,6 +67,8 @@
    #:stack-layout-presentation
    #:vertical-layout-presentation
    #:horizontal-layout-presentation
+   #:vertical-flow-layout-presentation
+   #:horizontal-flow-layout-presentation
 
    #:get-component
    #:add-component
