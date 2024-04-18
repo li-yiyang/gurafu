@@ -124,6 +124,35 @@ Also, you may try some more plot pane types:
 
   NOTE: the color map function is quite plain, I need to make
   this more easier to use... 
++ =scatter-pane=
+
+  #+name: scatter-pane
+  #+headers: :var out-path="./demo-img/scatter-pane-demo.png"
+  #+begin_src lisp :results file :exports both
+    (in-package :gurafu)
+
+    (with-present-to-file
+        (plot plot :margin 20)
+        (out-path :width 400 :height 400)
+      (add-plot-data plot
+          (scatter-pane pesudo-data :point-style :cross
+                                    :point-size 4
+                                    :color +鹅黄+)
+        (loop for x from -2 upto 2 by 0.1
+              for delta-x = (- 0.2 (random 0.4))
+              for delta-y = (- 0.8 (random 1.6))
+              collect (list (+ x delta-x) (+ (* x x) delta-y))))
+      (add-plot-data plot
+          (line-plot-pane fit :color +大红+)
+        (loop for x from -2 upto 2 by 0.01
+              collect (list x (* x x))))
+      (set-xy-bounding-box plot -2 2 -0.5 5))
+
+    out-path
+  #+end_src
+
+  #+RESULTS: scatter-pane
+  [[file:./demo-img/scatter-pane-demo.png]]
 
 * Work in Progress
 Here are some little developing memos about GURAFU:

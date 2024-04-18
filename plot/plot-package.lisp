@@ -8,6 +8,7 @@
    #:histogram-pane
    #:2d-grid-pane
    #:2d-histogram-pane
+   #:scatter-pane
    
    #:plot
    

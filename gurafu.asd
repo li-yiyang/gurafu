@@ -19,6 +19,7 @@
                (:file "histogram-pane")
                (:file "2d-grid-pane")
                (:file "2d-histogram-pane")
+               (:file "scatter-pane")
                (:file "plot")))
 
 (defsystem #:gurafu/protocol

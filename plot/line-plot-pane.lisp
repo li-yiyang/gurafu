@@ -23,7 +23,7 @@
 (defmethod rescale-plot-pane ((plot line-plot-pane))
   (with-slots (%plot-data) plot
     (macrolet ((got (type pos)
-                 `(apply #',type (mapcar #',pos %plot-data))))
+                 `(reduce #',type (mapcar #',pos %plot-data))))
       (set-xy-bounding-box
        plot (got min first) (got max first)
        (got min second) (got max second)))))
