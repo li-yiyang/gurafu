@@ -22,7 +22,8 @@
 (defmethod set-stream-margins :around
     ((plot framed-axes-mixin) left right bottom top)
   (with-slots (%tick-padding %tick-font-size
-               %y-min %y-max %tick-precisition)
+               %y-min %y-max %tick-precisition
+               %y-label %x-label)
       plot
     (flet ((precise (x)
              (format nil (format nil "~~,~df" %tick-precisition) x)))
@@ -30,9 +31,12 @@
              (left-offset (+ %tick-padding
                              (max %tick-font-size
                                   (draw-text-size plot (precise %y-max))
-                                  (draw-text-size plot (precise %y-min))))))
+                                  (draw-text-size plot (precise %y-min))
+                                  (draw-text-size plot %y-label))))
+             (right-offset (+ %tick-padding
+                              (draw-text-size plot %x-label))))
         (call-next-method plot
-                          (+ left left-offset) (+ right offset)
+                          (+ left left-offset) (+ right right-offset)
                           (+ bottom offset) (+ top offset))))))
 
 (defmethod present :after ((plot framed-axes-mixin))

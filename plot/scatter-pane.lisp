@@ -14,11 +14,16 @@
 
 (defmethod rescale-plot-pane ((scatter scatter-pane))
   (with-slots (%plot-data) scatter
-    (macrolet ((got (type pos)
-                 `(reduce #',type (mapcar #',pos %plot-data))))
-      (set-xy-bounding-box
-       scatter (got min first) (got max first)
-       (got min second) (got max second)))))
+    (macrolet ((got (type pos init)
+                 `(reduce #',type (mapcar #',pos %plot-data)
+                          :initial-value ,init)))
+      (multiple-value-bind (x-min x-max y-min y-max)
+          (xy-bounding-box scatter)
+        (set-xy-bounding-box scatter
+                             (got min first x-min)
+                             (got max first x-max)
+                             (got min second y-min)
+                             (got max second y-max))))))
 
 ;; ========== initialize-instance ==========
 

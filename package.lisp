@@ -45,6 +45,7 @@
    #:draw-circle
    #:draw-line
 
+   ;; coordinates
    #:stream-box
    #:stream-box-width
    #:stream-box-height
@@ -53,6 +54,9 @@
    #:stream-bounding-box-width
    #:stream-bounding-box-height
    #:set-stream-bounding-box
+
+   ;; xy-bounding-box
+   #:set-xy-bounding-box
    
    ;; presentation
    #:with-present-to-file
@@ -82,7 +86,8 @@
    #:histogram-pane
    #:2d-grid-pane
    #:2d-histogram-pane
-   
+   #:scatter-pane
+
    #:plot
    
    #:rescale-plot-pane
