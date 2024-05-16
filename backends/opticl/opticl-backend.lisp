@@ -463,7 +463,7 @@ To draw a char:
 (declaim (inline norm-list num-list 2d-rotate-clockwise))
 (defun norm-list (list)
   "Calculate the norm length of list. "
-  (apply #'+ (mapcar #'* list list)))
+  (sqrt (apply #'+ (mapcar #'* list list))))
 
 (defun num-list (num list)
   "Multiple list element with num. "
@@ -473,7 +473,7 @@ To draw a char:
   "Rotate a 2d list 90 degree clockwise. "
   (let ((x (first list))
         (y (second list)))
-    (list y (- x))))
+    (list y x)))
 
 ;; ========== draw-text-size! ==========
 
@@ -497,6 +497,40 @@ To draw a char:
                    line-width line-forward)
         (text-size char-list font-size char-forward))))
 
+;; ========== init-char-point ==========
+
+(defun init-char-point (u v text-align)
+  "Calculate the init char position with `text-align' for offset. "
+  (ecase text-align
+    ((:normal
+      :left
+      :left-top
+      :top-left)
+     (list u v))
+    ((:center
+      :centered)
+     (list (- u (truncate width 2))
+           (- v (truncate height 2))))
+    ((:horizontal-center
+      :top-center)
+     (list (- u (truncate width 2)) v))
+    ((:vertical-center
+      :left-vertical-center
+      :vertical-center-left)
+     (list u (- v (truncate height 2))))
+    ((:right
+      :right-top
+      :top-right)
+     (list (- u width) v))
+    ((:bottom
+      :left-bottom)
+     (list u (- v height)))
+    ((:right-bottom)
+     (list (- u width) (- v height)))
+    ((:right-center
+      :right-vertical-center)
+     (list (- u width) (- v (truncate height 2))))))
+
 ;; ========== draw-text! ==========
 
 ;; TODO: Make this function more shorter and easy to debug...
@@ -506,78 +540,44 @@ To draw a char:
                          (text-align :normal)
                          (font-size 16)
                          (font-name "UNIFONT")
-                         (char-spacing 1.0)
+                         (char-spacing 1.2)
                          (line-width 100 line-width-set?)
-                         (line-spacing 1.5)
+                         (line-spacing 1.2)
                        &allow-other-keys)
-  (let* ((char-list (map 'list #'identity text))
-         (*opticl-default-font* (find-font font-name))
-         (forward (num-list (float (/ 1 (norm-list text-path)))
-                            text-path))
+  (let* ((char-list             (map 'list #'identity text))
+         (*opticl-default-font* (or (find-font font-name)
+                                    *opticl-default-font*))
+         (forward      (num-list (/ 1.0 (norm-list text-path)) text-path))
          (char-forward (num-list char-spacing forward))
-         (line-forward (num-list line-spacing
-                                 (2d-rotate-clockwise forward)))
+         (line-forward (num-list line-spacing (2d-rotate-clockwise forward)))
          (color (rgb-color! opticl color))
          (img (slot-value opticl '%opticl-image)))
-    (multiple-value-bind (width height)
-        (if line-width-set?
-            (text-size char-list font-size char-forward
-                       line-width line-forward)
-            (text-size char-list font-size char-forward))
-      (loop with scale = (font-scale *opticl-default-font* font-size)
+    (loop with scale = (font-scale *opticl-default-font* font-size)
 
-            with (u0 v0) = (ecase text-align
-                             ((:normal
-                               :left
-                               :left-top
-                               :top-left)
-                              (list u v))
-                             ((:center
-                               :centered)
-                              (list (- u (truncate width 2))
-                                    (- v (truncate height 2))))
-                             ((:horizontal-center
-                               :top-center)
-                              (list (- u (truncate width 2)) v))
-                             ((:vertical-center
-                               :left-vertical-center
-                               :vertical-center-left)
-                              (list u (- v (truncate height 2))))
-                             ((:right
-                               :right-top
-                               :top-right)
-                              (list (- u width) v))
-                             ((:bottom
-                               :left-bottom)
-                              (list u (- v height)))
-                             ((:right-bottom)
-                              (list (- u width) (- v height)))
-                             ((:right-center
-                               :right-vertical-center)
-                              (list (- u width) (- v (truncate height 2)))))
+          with (u0 v0) = (init-char-point u v text-align)
 
-            with (cursor-u cursor-v) = (list u0 v0)
-            with (line-u   line-v)   = (list u0 v0)
+          with (cursor-u cursor-v) = (list u0 v0)
+          with (line-u   line-v)   = (list u0 v0)
 
-            with (forward-u forward-v) = char-forward
+          with (forward-u forward-v) = char-forward
 
-            with (forline-u forline-v) = (mapcar #'truncate
-                                                 (num-list font-size
-                                                           line-forward))
+          with (forline-u forline-v)
+            = (mapcar #'truncate (num-list font-size line-forward))
 
-            for c in char-list
-            for char = (get-char *opticl-default-font*
-                                 (format nil "U+~4,'0X" (char-code c)))
-            for width = (char-width char scale)
+          for c in char-list
+          for char = (get-char *opticl-default-font*
+                               (format nil "U+~4,'0X" (char-code c)))
+          for width = (char-width char scale)
+          for (move-u move-v) = (list (truncate (* width forward-u))
+                                      (truncate (* width forward-v)))
 
-            do (draw-char img cursor-u cursor-v char scale color)
-            do (incf cursor-u (truncate (* width forward-u)))
-            do (incf cursor-v (truncate (* width forward-v)))
-
-            if (or (equal c #\Newline)
-                   (and line-width-set?
-                        (> cursor-u line-width)))
-              do (setf line-u (+ line-u forline-u)
-                       line-v (+ line-v forline-v))
-              and do (setf u line-u
-                           v line-v)))))
+          do (cond ((or (char= c #\Newline)
+                        (and line-width-set?
+                             (> (+ cursor-u move-u) line-width)))
+                    (setf line-u (+ line-u forline-u)
+                          line-v (+ line-v forline-v))
+                    (setf cursor-u line-u
+                          cursor-v line-v))
+                   (t (draw-char img cursor-u cursor-v char scale color)
+                      (incf cursor-u move-u)
+                      (incf cursor-v move-v))))))
