@@ -22,6 +22,7 @@ when I have to refer to Mathematica's =Plot=, or
 Python's =matplotlib=, I shall consider adding
 similar functionality into GURAFU. 
 
+** Simple Plots
 You could just try:
 
 #+name: first-usable-plot-sin-cos-demo
@@ -154,6 +155,15 @@ Also, you may try some more plot pane types:
   #+RESULTS: scatter-pane
   [[file:./demo-img/scatter-pane-demo.png]]
 
+** More Demo Indepth
+Here are (is) something I use for my homework report,
+but please note that this these maybe written for a every
+early stage GURAFU, therefore some code and api may change.
++ [[file:docs/historical/random-function-test-report.pdf][Random Function Test Report]]
+
+  =histogram-pane=, =scatter-pane=, =2d-grid-pane=, =line-plot-pane= are used,
+  see appendix B.5 for the plot code using GURAFU.
+
 * Work in Progress
 Here are some little developing memos about GURAFU:
 
@@ -176,6 +186,19 @@ Here are some little developing memos about GURAFU:
   =+white+=, =+black+=;
 + GURAFU global variables should be wrapped with =*=, for
   example =*foreground-color*=, =*background-color*=;
+
+** Road Map
++ decorator widgets on plot
+
+  labels, legends, ...
++ rewrite protocol with closure to simplify code
++ documentations
+  + demos: cltl2 demo
+  + api manual
+  + usage tutorial
++ other backends
+
+  html, svg, ...
 
 * Historical Codes
 This codes maybe outdated, so may not work. Or these codes need
