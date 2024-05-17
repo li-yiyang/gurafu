@@ -222,7 +222,7 @@ if fails to find, return `*opticl-default-font*'. "
 (defmethod draw-line! ((opticl opticl-backend) u1 v1 u2 v2
                        &key (color *foreground-color*)
                        ;; (line-style :solid) not implemented
-                         (pen-width *pen-width* pen-width-set?)
+                         (pen-width *pen-width*)
                        &allow-other-keys)
   (let ((img   (slot-value opticl '%opticl-image))
         (color (rgb-color! opticl color)))
@@ -231,19 +231,18 @@ if fails to find, return `*opticl-default-font*'. "
 
     ;; if set pen-width
     ;; poor man's `pen-width' implementation
-    (when pen-width-set?
-      (let ((half-w (truncate pen-width 2)))
-        (if (> (abs (- u2 u1)) (abs (- v2 v1)))
-            (dotimes (offset half-w)
-              (apply #'draw-line
-                     img (+ v1 offset 1) u1 (+ v2 offset 1) u2 color)
-              (apply #'draw-line
-                     img (- v1 offset 1) u1 (- v2 offset 1) u2 color))
-            (dotimes (offset half-w)
-              (apply #'draw-line
-                     img v1 (+ u1 offset 1) v2 (+ u2 offset 1) color)
-              (apply #'draw-line
-                     img v1 (- u1 offset 1) v2 (- u2 offset 1) color)))))
+    (let ((half-w (truncate pen-width 2)))
+      (if (> (abs (- u2 u1)) (abs (- v2 v1)))
+          (dotimes (offset half-w)
+            (apply #'draw-line
+                   img (+ v1 offset 1) u1 (+ v2 offset 1) u2 color)
+            (apply #'draw-line
+                   img (- v1 offset 1) u1 (- v2 offset 1) u2 color))
+          (dotimes (offset half-w)
+            (apply #'draw-line
+                   img v1 (+ u1 offset 1) v2 (+ u2 offset 1) color)
+            (apply #'draw-line
+                   img v1 (- u1 offset 1) v2 (- u2 offset 1) color))))
 
     ;; return the bounding box
     (values (min u1 u2) (max u1 u2)
@@ -487,7 +486,7 @@ To draw a char:
                        &key (color *foreground-color*)                         
                          (char-forward *char-forward*)
                          (line-forward *line-forward*)
-                         (text-align :normal)
+                         (text-align *text-align*)
                          (font-size *font-size*)
                          (font-name "UNIFONT")
                          (char-spacing *char-spacing*)
