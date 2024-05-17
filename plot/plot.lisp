@@ -22,22 +22,25 @@
 (defmethod set-stream-margins :around
     ((plot framed-axes-mixin) left right bottom top)
   (with-slots (%tick-padding %tick-font-size
-               %y-min %y-max %tick-precisition
+               %tick-precisition
                %y-label %x-label)
       plot
-    (flet ((precise (x)
-             (format nil (format nil "~~,~df" %tick-precisition) x)))
-      (let* ((offset (+ %tick-padding %tick-font-size))
-             (left-offset (+ %tick-padding
-                             (max %tick-font-size
-                                  (draw-text-size plot (precise %y-max))
-                                  (draw-text-size plot (precise %y-min))
-                                  (draw-text-size plot %y-label))))
-             (right-offset (+ %tick-padding
-                              (draw-text-size plot %x-label))))
-        (call-next-method plot
-                          (+ left left-offset) (+ right right-offset)
-                          (+ bottom offset) (+ top offset))))))
+    (multiple-value-bind (x-min x-max y-min y-max)
+        (xy-bounding-box plot)
+      (declare (ignore x-min x-max))
+      (flet ((precise (x)
+               (format nil (format nil "~~,~df" %tick-precisition) x)))
+        (let* ((offset (+ %tick-padding %tick-font-size))
+               (left-offset (+ %tick-padding
+                               (max %tick-font-size
+                                    (draw-text-size plot (precise y-max))
+                                    (draw-text-size plot (precise y-min))
+                                    (draw-text-size plot %y-label))))
+               (right-offset (+ %tick-padding
+                                (draw-text-size plot %x-label))))
+          (call-next-method plot
+                            (+ left left-offset) (+ right right-offset)
+                            (+ bottom offset) (+ top offset)))))))
 
 (defmethod present :after ((plot framed-axes-mixin))
   (with-slots (%frame-width %x-label %y-label
@@ -102,49 +105,37 @@
                  :pen-width %frame-width
                  :fill? nil))))
 
-;; ========== plot ==========
+;; ========== plot-panes ==========
 
-(defclass plot (stack-layout-presentation
-                framed-axes-mixin)
-  ((%x-min :initform -1 :initarg :x-min)
-   (%x-max :initform 1  :initarg :x-max)
-   (%y-min :initform 1  :initarg :y-min)
-   (%y-max :initform 1  :initarg :y-max)
-   (%background-color :initform *background-color* :initarg :background-color))
+(defclass plot-panes (stack-layout-presentation
+                      xy-box-mixin)
+  ()
   (:documentation
-   "This is the basic plot holder to show a plot.
-
-The `plot' is a collection of `plot-pane' which draws the "))
-
-;; ========== xy-bounding-box ==========
-
-(defmethod xy-bounding-box ((stream plot))
-  (with-slots (%x-min %x-max %y-min %y-max) stream
-    (values %x-min %x-max %y-min %y-max)))
+   "The `plot-panes' is a collection of `plot-pane' objects.
+The `plot-panes' is `stack-layout-presentation' subclass object,
+its component of `plot-panes' should be `plot-pane'. "))
 
 ;; ========== set-xy-bounding-box ==========
+;; reset inner `plot-pane' object xy-bounding-box
 
-(defmethod set-xy-bounding-box ((stream plot) x-min x-max y-min y-max)
-  (with-slots (%x-min %x-max %y-min %y-max) stream
-    (setf %x-min x-min
-          %x-max x-max
-          %y-min y-min
-          %y-max y-max)
-    (loop-components (stream plot-pane)
-      (set-xy-bounding-box plot-pane x-min x-max y-min y-max))))
+(defmethod set-xy-bounding-box :after
+    ((plot-panes plot-panes) x-min x-max y-min y-max)
+  (loop-components (plot-panes plot-pane)
+    (set-xy-bounding-box plot-pane x-min x-max y-min y-max)))
 
 ;; ========== rescale-plot-pane ==========
 
-(defmethod rescale-plot-pane ((plot plot))
-  (with-slots (%x-min %x-max %y-min %y-max) plot
-    (loop-components (plot plot-pane)
-      (multiple-value-bind (x-min x-max y-min y-max)
+(defmethod rescale-plot-pane ((plot-panes plot-panes))
+  (multiple-value-bind (x-min x-max y-min y-max)
+      (xy-bounding-box plot-panes)
+    (loop-components (plot-panes plot-pane)
+      (multiple-value-bind (a-min a-max b-min b-max)
           (xy-bounding-box plot-pane)
-        (setf %x-min (min %x-min x-min)
-              %x-max (max %x-max x-max)
-              %y-min (min %y-min y-min)
-              %y-max (max %y-max y-max))))
-    (set-xy-bounding-box plot %x-min %x-max %y-min %y-max)))
+        (setf x-min (min x-min a-min)
+              x-max (max x-max a-max)
+              y-min (min y-min b-min)
+              y-max (max y-max b-max))))
+    (set-xy-bounding-box plot-panes x-min x-max y-min y-max)))
 
 ;; ========== add-plot-pane ==========
 
@@ -152,9 +143,91 @@ The `plot' is a collection of `plot-pane' which draws the "))
   (:documentation
    "Add a `plot-pane' with `name' to `plot'. "))
 
+(defmethod add-plot-pane ((plot-panes plot-panes) name plot-pane)
+  (unless (typep plot-pane 'basic-plot-pane)
+    (warn (format nil "~a may not be subclass of `basic-plot-pane'."
+                  (type-of plot-pane))))
+  (add-component plot-panes name plot-pane 0.0 0.0 1.0 1.0)
+  (rescale-plot-pane plot-panes))
+
+;; ========== plot ==========
+
+(defclass plot (base-presentation
+                framed-axes-mixin)
+  ((%plot-panes :initform (make-instance 'plot-panes))
+   (%decorators :initform (make-instance 'stack-layout-presentation))
+   (%background-color :initform *background-color*
+                      :initarg :background-color))
+  (:documentation
+   "This is the basic plot holder to show a plot.
+
+The `plot' is like a four layer image, from bottom to top, there are:
+
+1. background: a rectangle filled with `%background-color';
+2. plot-panes: a collection of `plot-pane' holding different plot in
+   the same xy box, the last added plot-pane will be drawn on top;
+3. decorator: a collection of widgets, which are drawn on the top;
+4. frame ticks: from `framed-axes-mixin'.
+
+===== PLOT-PANE ====
+
+To add a data to `plot', use `add-plot-pane' or `add-plot-data':
+
++ `add-plot-pane' is like `add-component', but using `add-plot-pane'
+  is recommanded.
+
+  for example:
+
+    (add-plot-pane plot NAME (with-present (2d-grid-pane :plot-data ...)))
+
+  this is a little difficult to use, so anyway, I recommand to use
+  `add-plot-data' macro to do this automatically;
+
++ `add-plot-data' is a warpper macro for `add-plot-pane'.
+
+  for example:
+
+    (add-plot-data plot (2d-grid-pane NAME :init-args ...)
+       code-to-generate-the-plot-data)
+
+  the code body of `add-plot-data' should return a plot data for `plot-pane'.
+
+===== DECORATORS =====
+
+"))
+
+;; ========== initialize-instance ==========
+
+(flet ((re-align (plot left right bottom top)
+         (with-slots (%decorators %plot-panes) plot
+           (set-stream-bounding-box %decorators left right bottom top)
+           (set-stream-bounding-box %plot-panes left right bottom top))))
+  (defmethod initialize-instance :after ((plot plot) &key)
+    (multiple-value-bind (left right bottom top)
+        (stream-box plot)
+      (re-align plot left right bottom top)))
+  (defmethod set-stream-box :after
+      ((plot plot) left right bottom top)
+    (re-align plot left right bottom top)))
+
+;; ========== xy-bounding-box ==========
+
+(defmethod xy-bounding-box ((plot plot))
+  (xy-bounding-box (slot-value plot '%plot-panes)))
+
+(defmethod set-xy-bounding-box ((plot plot) x-min x-max y-min y-max)
+  (set-xy-bounding-box (slot-value plot '%plot-panes)
+                       x-min x-max y-min y-max))
+
+;; ========== rescale-plot-pane ==========
+
+(defmethod rescale-plot-pane ((plot plot))
+  (rescale-plot-pane (slot-value plot '%plot-panes)))
+
+;; ========== add-plot-pane ==========
+
 (defmethod add-plot-pane ((plot plot) name plot-pane)
-  (add-component plot name plot-pane 0.0 0.0 1.0 1.0)
-  (rescale-plot-pane plot))
+  (add-plot-pane (slot-value plot '%plot-panes) name plot-pane))
 
 ;; ========== add-plot-data ==========
 
@@ -164,6 +237,28 @@ The `plot' is a collection of `plot-pane' which draws the "))
                   (make-instance ',type :plot-data (progn ,@data)
                                  ,@init-args)))
 
+;; ========== add-plot-decorator ==========
+
+(defgeneric add-plot-decorator (plot name u-x v-y decorator &optional xy?)
+  (:documentation
+   "Add a `decorator' with `name' to `plot'.
+If `xy?' (default `nil'), then use x-y coordinates for add plot. "))
+
+(defmethod add-plot-decorator
+    ((plot plot) name u-x v-y decorator &optional (xy? nil))
+  (with-slots (%decorators %plot-panes) plot
+    (multiple-value-bind (left right bottom top)
+        (stream-bounding-box decorator)
+      (if xy?
+          (set-stream-bounding-box decorator
+                                   (+ u-x left) (+ u-x right)
+                                   (+ v-y bottom) (+ v-y top))
+          (with-xy-to-uv %plot-panes
+              ((u v) (u-x v-y))
+            (set-stream-bounding-box decorator
+                                     (+ u left) (+ u right)
+                                     (+ v bottom) (+ v top)))))))
+
 ;; ========== get-plot-pane ==========
 
 (defgeneric get-plot-pane (plot name)
@@ -171,11 +266,12 @@ The `plot' is a collection of `plot-pane' which draws the "))
    "Get the plot-pane with `name' in `plot'. "))
 
 (defmethod get-plot-pane ((plot plot) name)  
-  (gethash name (get-component plot)))
+  (get-component (slot-value plot '%plot-panes) name))
 
-;; ========== present :before ==========
+;; ========== present ==========
 
-(defmethod present :before ((plot plot))
-  (with-slots (%background-color) plot
-    (draw-rect plot 0.0 0.0 1.0 1.0
-               :color %background-color)))
+(defmethod present ((plot plot))
+  (with-slots (%background-color %plot-panes %decorators) plot
+    (draw-rect plot 0.0 0.0 1.0 1.0 :color %background-color)
+    (present %plot-panes)
+    (present %decorators)))
