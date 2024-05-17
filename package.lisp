@@ -1,6 +1,21 @@
 (defpackage :gurafu
   (:use :cl :gurafu/core :gurafu/plot)
   (:export
+   ;; closure
+   #:*pen-width*
+   #:*line-style*
+   #:*fill?*
+   #:*color*
+   #:*point-style*
+   #:*font-color*
+   #:*text-align*
+   #:*char-forward*
+   #:*line-forward*
+   #:*char-spacing*
+   #:*line-spacing*
+   #:*font-size*
+   #:*font-name*
+
    ;; colors
    #:+white+
    #:+black+

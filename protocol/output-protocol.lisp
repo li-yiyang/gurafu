@@ -103,8 +103,12 @@ Return values are uv bounding box left, right, bottom and top. "))
 
 (defrequired draw-text-size! (stream
                               text
-                              &key text-path text-align
-                              line-width line-spacing
+                              &key
+                              char-forward
+                              line-forward
+                              text-align
+                              line-width
+                              line-spacing
                               char-spacing font-size font-name
                               &allow-other-keys)
   (:documentation
@@ -114,8 +118,12 @@ Return values are uv bounding box left, right, bottom and top. "))
 
 (defrequired darw-text! (stream
                          u v text
-                         &key color text-path text-align
-                         line-width line-spacing
+                         &key color                         
+                         char-forward
+                         line-forward
+                         text-align
+                         line-width
+                         line-spacing
                          char-spacing
                          font-size font-name
                          &allow-other-keys)

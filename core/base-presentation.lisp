@@ -111,14 +111,16 @@ which is quite low-level... Not recommanded. "))
   (:documentation "Draw text on `obj', position relative to `obj'. "))
 
 (defgeneric draw-text-size (obj text
-                            &key text-path font-size font-name
-                              char-spacing line-width line-spacing
+                            &key text-path char-forward line-forward
+                              font-size font-name char-spacing
+                              line-width line-spacing
                             &allow-other-keys)
   (:documentation "Get text size when drawing on `obj'. "))
 
 (defgeneric draw-text (obj x y text
-                       &key color text-path text-align
-                         font-size font-name char-spacing
+                       &key color
+                         text-path char-forward line-forward
+                         text-align font-size font-name char-spacing
                          line-width line-spacing
                        &allow-other-keys)
   (:documentation "Draw text on `obj', position relative to `obj'. "))
@@ -156,82 +158,79 @@ which is quite low-level... Not recommanded. "))
 
 (defmethod draw-point ((obj base-presentation) x y
                        &key (color *foreground-color*)
-                         (point-style :dot)
-                         (pen-width 1)
+                         (point-style *point-style*)
+                         (pen-width *pen-width*)
                          (offset '(0 0))
                        &allow-other-keys)
   (multiple-value-bind (left right bottom top)
       (stream-box obj)
     (let ((x (+ (coord left x right)  (first offset)))
-          (y (+ (coord top  y bottom) (second offset))))
-      (draw-point! (slot-value obj '%backend) x y
-                   :point-style point-style
-                   :pen-width pen-width
-                   :color color))))
+          (y (+ (coord top  y bottom) (second offset)))
+          (*point-style* point-style)
+          (*pen-width*   pen-width)
+          (*foreground-color* color))
+      (draw-point! (slot-value obj '%backend) x y))))
 
 (defmethod draw-text-size ((obj base-presentation) text
-                           &key (text-path '(1.0 0.0))
-                             (font-size 16)
+                           &key (text-path '(1.0 0.0) text-path-set?)
+                             (line-forward *line-forward*)
+                             (char-forward *char-forward*)
+                             (font-size *font-size*)
                              (font-name "UNIFONT")
-                             (char-spacing 1.0)
-                             (line-width 100 line-width-set?)
-                             (line-spacing 1.5)
+                             (char-spacing *char-spacing*)
+                             (line-width 0)
+                             (line-spacing *line-spacing*)
                            &allow-other-keys)
-  (if line-width-set?
-      (draw-text-size! (slot-value obj '%backend) text
-                       :text-path text-path
-                       :font-size font-size
-                       :font-name font-name
-                       :char-spacing char-spacing
-                       :line-width line-width
-                       :line-spacing line-spacing)
-      (draw-text-size! (slot-value obj '%backend) text
-                       :text-path text-path
-                       :font-size font-size
-                       :font-name font-name
-                       :char-spacing char-spacing)))
+  (let ((*line-forward* (if text-path-set?
+                            (reverse text-path) ;; rotate 90 degree clockwise
+                            line-forward))
+        (*char-forward* (if text-path-set?
+                            text-path
+                            char-forward))
+        (*line-spacing* line-spacing)
+        (*char-spacing* char-spacing)
+        (*font-size*    font-size))
+    (draw-text-size! (slot-value obj '%backend) text
+                     :font-name font-name
+                     :line-width line-width)))
 
 (defmethod draw-text ((obj base-presentation) x y text
                       &key (color *foreground-color*)
-                        (text-path '(1.0 0.0))
-                        (text-align :normal)
-                        (font-size 16)
+                        (text-path '(1.0 0.0) text-path-set?)
+                        (char-forward *char-forward*)
+                        (line-forward *line-forward*)
+                        (text-align *text-align*)
+                        (font-size  *font-size*)
                         (font-name "UNIFONT")
-                        (char-spacing 1.0)
-                        (line-width 0 line-width-set?)
-                        (line-spacing 1.5)
+                        (char-spacing *char-spacing*)
+                        (line-width 0)
+                        (line-spacing *line-spacing*)
                         (offset '(0 0))
                       &allow-other-keys)
   (multiple-value-bind (left right bottom top)
       (stream-box obj)
     (let ((x (+ (coord left x right)  (first offset)))
           (y (+ (coord top  y bottom) (second offset))))
-      (with-slots (%backend) obj
-        ;; I hate this, must change this later...
-        (if line-width-set?
-            (draw-text! %backend x y text
-                        :color        color
-                        :text-path    text-path
-                        :text-align   text-align
-                        :font-size    font-size
-                        :font-name    font-name
-                        :char-spacing char-spacing
-                        :line-width   line-width
-                        :line-spacing line-spacing)
-            (draw-text! %backend x y text
-                        :color        color
-                        :text-path    text-path
-                        :text-align   text-align
-                        :font-size    font-size
-                        :font-name    font-name
-                        :char-spacing char-spacing
-                        :line-spacing line-spacing))))))
+      (let ((*line-forward* (if text-path-set?
+                                (reverse text-path) ;; rotate 90 degree clockwise
+                                line-forward))
+            (*char-forward* (if text-path-set?
+                                text-path
+                                char-forward))
+            (*line-spacing* line-spacing)
+            (*char-spacing* char-spacing)
+            (*font-size*    font-size)
+            (*foreground-color* color)
+            (*text-align* text-align))
+        (draw-text! (slot-value obj '%backend) x y text
+                    :font-name    font-name
+                    :line-width   line-width)))))
 
 (defmethod draw-triangle ((obj base-presentation) x1 y1 x2 y2 x3 y3
                           &key (color *foreground-color*)
-                            (pen-width 1)
-                            (line-style :solid)
-                            (fill? t)
+                            (pen-width *pen-width*)
+                            (line-style *line-style*)
+                            (fill? *fill?*)
                             (fill-color color)
                             (offset '(0 0))
                           &allow-other-keys)
@@ -244,20 +243,20 @@ which is quite low-level... Not recommanded. "))
            (x2 (+ (coord left x2 right) offx))
            (y2 (+ (coord top  y2 bottom) offy))
            (x3 (+ (coord left x3 right) offx))
-           (y3 (+ (coord top  y3 bottom) offy)))
+           (y3 (+ (coord top  y3 bottom) offy))
+           (*fill?* fill?)
+           (*foreground-color* color)
+           (*pen-width* pen-width)
+           (*line-style* line-style))
       (draw-tringle! (slot-value obj '%backend)
                      x1 y1 x2 y2 x3 y3
-                     :fill-color fill-color
-                     :fill? fill?
-                     :line-style line-style
-                     :pen-width pen-width
-                     :color color))))
+                     :fill-color fill-color))))
 
 (defmethod draw-rect ((obj base-presentation) x1 y1 x2 y2
                       &key (color *foreground-color*)
-                        (pen-width 1)
-                        (line-style :solid)
-                        (fill? t)
+                        (pen-width *pen-width*)
+                        (line-style *line-style*)
+                        (fill? *fill?*)
                         (fill-color color)
                         (offset '(0 0))
                       &allow-other-keys)
@@ -268,19 +267,19 @@ which is quite low-level... Not recommanded. "))
            (x1 (+ (coord left x1 right) offx))
            (y1 (+ (coord top  y1 bottom) offy))
            (x2 (+ (coord left x2 right) offx))
-           (y2 (+ (coord top  y2 bottom) offy)))
+           (y2 (+ (coord top  y2 bottom) offy))
+           (*fill?* fill?)
+           (*line-style* line-style)
+           (*pen-width* pen-width)
+           (*foreground-color* color))
       (draw-rect! (slot-value obj '%backend)
                   (min x1 x2) (min y1 y2) (max x1 x2) (max y1 y2)
-                  :fill-color fill-color
-                  :fill? fill?
-                  :line-style line-style
-                  :pen-width pen-width
-                  :color color))))
+                  :fill-color fill-color))))
 
 (defmethod draw-line ((obj base-presentation) x1 y1 x2 y2
                       &key (color *foreground-color*)
-                        (pen-width 1)
-                        (line-style :solid)
+                        (pen-width *pen-width*)
+                        (line-style *line-style*)
                         (offset '(0 0))
                       &allow-other-keys)
   (multiple-value-bind (left right bottom top)
@@ -290,9 +289,8 @@ which is quite low-level... Not recommanded. "))
            (x1 (+ (coord left x1 right) offx))
            (y1 (+ (coord top  y1 bottom) offy))
            (x2 (+ (coord left x2 right) offx))
-           (y2 (+ (coord top  y2 bottom) offy)))
-      (draw-line! (slot-value obj '%backend)
-                  x1 y1 x2 y2
-                  :line-style line-style
-                  :pen-width pen-width
-                  :color color))))
+           (y2 (+ (coord top  y2 bottom) offy))
+           (*foreground-color* color)
+           (*pen-width* pen-width)
+           (*line-style* line-style))
+      (draw-line! (slot-value obj '%backend) x1 y1 x2 y2))))

@@ -37,6 +37,7 @@ follow the behavior defined in `gurafu/protocol'. "
                (:file "protocol-macro")
                (:file "base-protocol")
                (:file "colored-mixin")
+               (:file "closures")
                (:file "output-protocol")))
 
 (defsystem #:gurafu/core

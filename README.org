@@ -191,7 +191,7 @@ Here are some little developing memos about GURAFU:
 + decorator widgets on plot
 
   labels, legends, ...
-+ rewrite protocol with closure to simplify code
++ +rewrite protocol with closure to simplify code+
 + documentations
   + demos: cltl2 demo
   + api manual

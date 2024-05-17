@@ -18,6 +18,21 @@
    #:draw-text!
    #:draw-text-size!
 
+   ;; parameters
+   #:*pen-width*
+   #:*line-style*
+   #:*fill?*
+   #:*color*
+   #:*point-style*
+   #:*font-color*
+   #:*text-align*
+   #:*char-forward*
+   #:*line-forward*
+   #:*char-spacing*
+   #:*line-spacing*
+   #:*font-size*
+   #:*font-name*
+
    ;; colored-mixin
    #:+white+
    #:+black+

@@ -173,9 +173,9 @@ if fails to find, return `*opticl-default-font*'. "
 
 (defmethod draw-point! ((opticl opticl-backend) u v
                         &key
-                          (color +black+)
-                          (pen-width 1)
-                          (point-style :dot)
+                          (color *foreground-color*)
+                          (pen-width *pen-width*)
+                          (point-style *point-style*)
                         &allow-other-keys)
   (let ((img   (slot-value opticl '%opticl-image))
         (size  (ceiling pen-width 2))
@@ -220,9 +220,9 @@ if fails to find, return `*opticl-default-font*'. "
 ;; ========== draw-line! ==========
 
 (defmethod draw-line! ((opticl opticl-backend) u1 v1 u2 v2
-                       &key (color +black+)
+                       &key (color *foreground-color*)
                        ;; (line-style :solid) not implemented
-                         (pen-width 1 pen-width-set?)
+                         (pen-width *pen-width* pen-width-set?)
                        &allow-other-keys)
   (let ((img   (slot-value opticl '%opticl-image))
         (color (rgb-color! opticl color)))
@@ -234,12 +234,12 @@ if fails to find, return `*opticl-default-font*'. "
     (when pen-width-set?
       (let ((half-w (truncate pen-width 2)))
         (if (> (abs (- u2 u1)) (abs (- v2 v1)))
-            (dotimes (offset (truncate pen-width 2))
+            (dotimes (offset half-w)
               (apply #'draw-line
                      img (+ v1 offset 1) u1 (+ v2 offset 1) u2 color)
               (apply #'draw-line
                      img (- v1 offset 1) u1 (- v2 offset 1) u2 color))
-            (dotimes (offset (truncate pen-width 2))
+            (dotimes (offset half-w)
               (apply #'draw-line
                      img v1 (+ u1 offset 1) v2 (+ u2 offset 1) color)
               (apply #'draw-line
@@ -252,10 +252,10 @@ if fails to find, return `*opticl-default-font*'. "
 ;; ========== draw-circle! ==========
 
 (defmethod draw-circle! ((opticl opticl-backend) u v uv-r
-                         &key (color +black+)
-                           (pen-width 1)
+                         &key (color *foreground-color*)
+                           (pen-width *pen-width*)
                          ;; (line-style :solid) not implemented
-                           (fill? t)
+                           (fill? *fill?*)
                            (fill-color color)
                          &allow-other-keys)
   (with-slots (%opticl-image) opticl
@@ -274,9 +274,9 @@ if fails to find, return `*opticl-default-font*'. "
 
 (defmethod draw-rect! ((opticl opticl-backend) u1 v1 u2 v2
                        &key (color *foreground-color*)
-                         (pen-width 1)
-                         (line-style :solid)
-                         (fill? t)
+                         (pen-width *pen-width*)
+                         (line-style *line-style*)
+                         (fill? *fill?*)
                          (fill-color color)
                        &allow-other-keys)
   (let ((pen-w (truncate pen-width 2)))
@@ -288,22 +288,13 @@ if fails to find, return `*opticl-default-font*'. "
                          (rgb-color! opticl fill-color))))
 
     ;; draw boundary
-    (draw-line! opticl u1 v1 u1 v2
-                :line-style line-style
-                :pen-width pen-width
-                :color color)
-    (draw-line! opticl u2 v1 u2 v2
-                :line-style line-style
-                :pen-width pen-width
-                :color color)
-    (draw-line! opticl u1 v1 u2 v1
-                :line-style line-style
-                :pen-width pen-width
-                :color color)
-    (draw-line! opticl u1 v2 u2 v2
-                :line-style line-style
-                :pen-width pen-width
-                :color color)
+    (let ((*line-style* line-style)
+          (*fill?* fill?)
+          (*foreground-color* color))
+      (draw-line! opticl u1 v1 u1 v2)
+      (draw-line! opticl u2 v1 u2 v2)
+      (draw-line! opticl u1 v1 u2 v1)
+      (draw-line! opticl u1 v2 u2 v2))
 
     ;; return bounding rectangle
     (values (- u1 pen-w) (+ u2 pen-w) (+ v2 pen-w) (- v1 pen-w))))
@@ -311,27 +302,22 @@ if fails to find, return `*opticl-default-font*'. "
 ;; ========== draw-triangle! ==========
 
 (defmethod draw-triangle! ((opticl opticl-backend) u1 v1 u2 v2 u3 v3
-                           &key (color *foreground-color*)
-                             (pen-width 1)
-                             (line-style :solid)
+                           &key
+                             (color *foreground-color*)
+                             (pen-width *pen-width*)
+                             (line-style *line-style*)
                              ;; (fill? t) not implemented
                              ;; (fill-color color)
                            &allow-other-keys)
 
   ;; draw triangle
-  (draw-line! opticl u1 v1 u2 v2
-              :line-style line-style
-              :pen-width pen-width
-              :color color)
-  (draw-line! opticl u1 v1 u3 v3
-              :line-style line-style
-              :pen-width pen-width
-              :color color)
-  (draw-line! opticl u2 v2 u3 v3
-              :line-style line-style
-              :pen-width pen-width
-              :color color)
-
+  (let ((*line-style* line-style)
+        (*pen-width* pen-width)
+        (*foreground-color* color))
+    (draw-line! opticl u1 v1 u2 v2)
+    (draw-line! opticl u1 v1 u3 v3)
+    (draw-line! opticl u2 v2 u3 v3))
+  
   ;; return bounding box
   (values (min u1 u2 u3) (max u1 u2 u3)
           (min v1 v2 v3) (max v1 v2 v3)))
@@ -346,9 +332,11 @@ if fails to find, return `*opticl-default-font*'. "
 Return values are bounding box of char width. "
   (values (truncate (* scale (font-size char)))))
 
-(defun text-size (char-list font-size char-forward 
-                  &optional (line-width 0 line-width-set?)
-                    (line-forward '(0 1.5))
+(defun text-size (char-list line-width
+                  &key
+                    (font-size *font-size*)
+                    (char-forward *char-forward*)
+                    (line-forward *line-forward*)
                     (font *opticl-default-font*))
   "Calculate the size of `text' when drawing with `scale'.
 
@@ -402,7 +390,7 @@ if not given `line-width', default assuming infinite long line. "
 
         ;; move to next line if overflow line-width
         if (or (equal c #\Newline)
-               (and line-width-set?
+               (and (> line-width 0)
                     (> u line-width)))
           do (setf line-u (+ line-u forline-u)
                    line-v (+ line-v forline-v))
@@ -460,7 +448,7 @@ To draw a char:
 
 ;; ========== draw text helper functions  ==========
 
-(declaim (inline norm-list num-list 2d-rotate-clockwise))
+(declaim (inline norm-list num-list))
 (defun norm-list (list)
   "Calculate the norm length of list. "
   (sqrt (apply #'+ (mapcar #'* list list))))
@@ -469,100 +457,85 @@ To draw a char:
   "Multiple list element with num. "
   (mapcar (lambda (x) (* num x)) list))
 
-(defun 2d-rotate-clockwise (list)
-  "Rotate a 2d list 90 degree clockwise. "
-  (let ((x (first list))
-        (y (second list)))
-    (list y x)))
-
 ;; ========== draw-text-size! ==========
 
 (defmethod draw-text-size! ((opticl opticl-backend) text
-                            &key (text-path '(1.0 0.0))
-                              (font-size 16)
+                            &key                              
+                              (char-forward *char-forward*)
+                              (line-forward *line-forward*)
+                              (font-size *font-size*)
                               (font-name "UNIFONT")
-                              (char-spacing 1.0)
-                              (line-width 100 line-width-set?)
-                              (line-spacing 1.5)
+                              (char-spacing *char-spacing*)
+                              (line-width 0)
+                              (line-spacing *line-spacing*)
                             &allow-other-keys)
-  (let* ((char-list (map 'list #'identity text))
-         (*opticl-default-font* (find-font font-name))
-         (forward (num-list (float (/ 1 (norm-list text-path)))
-                            text-path))
-         (char-forward (num-list char-spacing forward))
-         (line-forward (num-list line-spacing
-                                 (2d-rotate-clockwise forward))))
-    (if line-width-set?
-        (text-size char-list font-size char-forward
-                   line-width line-forward)
-        (text-size char-list font-size char-forward))))
-
-;; ========== init-char-point ==========
-
-(defun init-char-point (u v text-align)
-  "Calculate the init char position with `text-align' for offset. "
-  (ecase text-align
-    ((:normal
-      :left
-      :left-top
-      :top-left)
-     (list u v))
-    ((:center
-      :centered)
-     (list (- u (truncate width 2))
-           (- v (truncate height 2))))
-    ((:horizontal-center
-      :top-center)
-     (list (- u (truncate width 2)) v))
-    ((:vertical-center
-      :left-vertical-center
-      :vertical-center-left)
-     (list u (- v (truncate height 2))))
-    ((:right
-      :right-top
-      :top-right)
-     (list (- u width) v))
-    ((:bottom
-      :left-bottom)
-     (list u (- v height)))
-    ((:right-bottom)
-     (list (- u width) (- v height)))
-    ((:right-center
-      :right-vertical-center)
-     (list (- u width) (- v (truncate height 2))))))
+  (let ((char-list (map 'list #'identity text))
+        (*opticl-default-font* (find-font font-name))
+        (*font-size* font-size)
+        (*char-forward* (num-list (float (/ char-spacing
+                                            (norm-list char-forward)))
+                                  char-forward))
+        (*line-forward* (num-list (float (/ line-spacing
+                                            (norm-list line-forward)))
+                                  line-forward)))
+    (text-size char-list line-width)))
 
 ;; ========== draw-text! ==========
 
 ;; TODO: Make this function more shorter and easy to debug...
 (defmethod draw-text! ((opticl opticl-backend) u v text
-                       &key (color *foreground-color*)
-                         (text-path '(1.0 0.0))
+                       &key (color *foreground-color*)                         
+                         (char-forward *char-forward*)
+                         (line-forward *line-forward*)
                          (text-align :normal)
-                         (font-size 16)
+                         (font-size *font-size*)
                          (font-name "UNIFONT")
-                         (char-spacing 1.2)
-                         (line-width 100 line-width-set?)
-                         (line-spacing 1.2)
+                         (char-spacing *char-spacing*)
+                         (line-spacing *line-spacing*)
+                         (line-width   0)                         
                        &allow-other-keys)
-  (let* ((char-list             (map 'list #'identity text))
-         (*opticl-default-font* (or (find-font font-name)
-                                    *opticl-default-font*))
-         (forward      (num-list (/ 1.0 (norm-list text-path)) text-path))
-         (char-forward (num-list char-spacing forward))
-         (line-forward (num-list line-spacing (2d-rotate-clockwise forward)))
-         (color (rgb-color! opticl color))
-         (img (slot-value opticl '%opticl-image)))
+  (let* ((char-list      (map 'list #'identity text))
+         (color          (rgb-color! opticl color))
+         (img            (slot-value opticl '%opticl-image))
+         (*opticl-default-font* (or (find-font font-name) *opticl-default-font*))
+         (*char-forward* (num-list (float (/ char-spacing
+                                             (norm-list char-forward)))
+                                   char-forward))
+         (*line-forward* (num-list (float (/ line-spacing
+                                             (norm-list line-forward)))
+                                   line-forward))
+         (init-char-point
+           (multiple-value-bind (width height)
+               (text-size char-list line-width)
+             (ecase text-align
+               ((:normal :left :left-top :top-left)
+                (list u v))
+               ((:center :centered)
+                (list (- u (truncate width 2))
+                      (- v (truncate height 2))))
+               ((:horizontal-center :top-center)
+                (list (- u (truncate width 2)) v))
+               ((:vertical-center :left-vertical-center :vertical-center-left)
+                (list u (- v (truncate height 2))))
+               ((:right :right-top :top-right)
+                (list (- u width) v))
+               ((:bottom :left-bottom)
+                (list u (- v height)))
+               ((:right-bottom)
+                (list (- u width) (- v height)))
+               ((:right-center :right-vertical-center)
+                (list (- u width) (- v (truncate height 2))))))))
     (loop with scale = (font-scale *opticl-default-font* font-size)
 
-          with (u0 v0) = (init-char-point u v text-align)
+          with (u0 v0) = init-char-point
 
           with (cursor-u cursor-v) = (list u0 v0)
           with (line-u   line-v)   = (list u0 v0)
 
-          with (forward-u forward-v) = char-forward
+          with (forward-u forward-v) = *char-forward*
 
           with (forline-u forline-v)
-            = (mapcar #'truncate (num-list font-size line-forward))
+            = (mapcar #'truncate (num-list font-size *line-forward*))
 
           for c in char-list
           for char = (get-char *opticl-default-font*
@@ -572,7 +545,7 @@ To draw a char:
                                       (truncate (* width forward-v)))
 
           do (cond ((or (char= c #\Newline)
-                        (and line-width-set?
+                        (and (> line-width 0)
                              (> (+ cursor-u move-u) line-width)))
                     (setf line-u (+ line-u forline-u)
                           line-v (+ line-v forline-v))

@@ -189,63 +189,58 @@ Example:
 
 (defmethod draw-text ((obj xy-box-present) x y text
                       &key (color *foreground-color*)
-                        (text-path '(1.0 1.0))
-                        (text-align :normal)
-                        (font-size 16)
+                        (text-path '(1.0 1.0) text-path-set?)
+                        (line-forward *line-forward*)
+                        (char-forward *char-forward*)
+                        (text-align *text-align*)
+                        (font-size *font-size*)
                         (font-name "UNIFONT")
-                        (char-spacing 1.0)
-                        (line-width 0 line-width-set?)
-                        (line-spacing 1.5)
+                        (char-spacing *char-spacing*)
+                        (line-spacing *line-spacing*)
+                        (line-width 0)
                       &allow-other-keys)
   (with-xy-to-uv obj
       ((u v) (x y)
        (path-u path-v) ((first text-path) (second text-path)))
-    (if line-width-set?
-        (draw-text! (slot-value obj '%backend) u v text
-                    :color        color
-                    :text-path    (list path-u path-v)
-                    :text-align   text-align
-                    :font-size    font-size
-                    :font-name    font-name
-                    :char-spacing char-spacing
-                    :line-width   line-width
-                    :line-spacing line-spacing)
-        (draw-text! (slot-value obj '%backend) u v text
-                    :color        color
-                    :text-path    (list path-u path-v)
-                    :text-align   text-align
-                    :font-size    font-size
-                    :font-name    font-name
-                    :char-spacing char-spacing))))
+    (let ((*line-spacing* line-spacing)
+          (*char-spacing* char-spacing)
+          (*foreground-color* color)
+          (*text-align* text-align)
+          (*char-forward* (if text-path-set? (list path-u path-v) char-forward))
+          (*line-forward* (if text-path-set? (list path-v path-u) line-forward))
+          (*font-size* font-size))
+      (draw-text! (slot-value obj '%backend) u v text
+                  :font-name    font-name
+                  :line-width   line-width))))
 
 (defmethod draw-rect ((obj xy-box-present) x1 y1 x2 y2
                       &key (color *foreground-color*)
-                        (pen-width 1)
-                        (line-style :solid)
-                        (fill? t)
+                        (pen-width *pen-width*)
+                        (line-style *line-style*)
+                        (fill? *fill?*)
                         (fill-color color)
                       &allow-other-keys)
   (with-xy-to-uv obj
       ((u1 v1) (x1 y1)
        (u2 v2) (x2 y2))
-    (draw-rect! (slot-value obj '%backend)
+    (let ((*line-style* line-style)
+          (*fill?* fill?)
+          (*pen-width*  pen-width)
+          (*foreground-color* color))
+      (draw-rect! (slot-value obj '%backend)
                 (min u1 u2) (min v1 v2)
                 (max u1 u2) (max v1 v2)
-                :fill-color fill-color
-                :fill?      fill?
-                :line-style line-style
-                :pen-width  pen-width
-                :color      color)))
+                :fill-color fill-color))))
 
 (defmethod draw-line ((obj xy-box-present) x1 y1 x2 y2
                       &key (color *foreground-color*)
-                        (pen-width 1)
-                        (line-style :solid)
+                        (pen-width *pen-width*)
+                        (line-style *line-style*)
                       &allow-other-keys)
   (with-xy-to-uv obj
       ((u1 v1) (x1 y1)
        (u2 v2) (x2 y2))
-    (draw-line! (slot-value obj '%backend) u1 v1 u2 v2
-                :line-style line-style
-                :pen-width  pen-width
-                :color      color)))
+    (let ((*line-style* line-style)
+          (*pen-width*  pen-width)
+          (*foreground-color* color))
+      (draw-line! (slot-value obj '%backend) u1 v1 u2 v2))))

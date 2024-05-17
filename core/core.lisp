@@ -8,6 +8,21 @@
    :maphash-values
    :with-gensyms)
   (:export
+   ;; closure
+   #:*pen-width*
+   #:*line-style*
+   #:*fill?*
+   #:*color*
+   #:*point-style*
+   #:*font-color*
+   #:*text-align*
+   #:*char-forward*
+   #:*line-forward*
+   #:*char-spacing*
+   #:*line-spacing*
+   #:*font-size*
+   #:*font-name*
+   
    ;; colors
    #:lab-to-rgb-color
    #:xyz-to-rgb-color
