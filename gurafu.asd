@@ -3,8 +3,9 @@
   :version "0"
   :license "MIT"
   :description "This is a package that deals with ploting."
-  :depends-on (:gurafu/plot)
-  :components ((:file "package")))
+  :depends-on (:gurafu/plot :gurafu/core :trivial-indent)
+  :components ((:file "package")
+               (:file "indent")))
 
 (defsystem #:gurafu/plot
   :author ("凉凉")
@@ -14,12 +15,15 @@
   :pathname "plot"
   :depends-on (:gurafu/core)
   :components ((:file "plot-package")
+               ;; plot-panes
                (:file "basic-plot-pane")
                (:file "line-plot-pane")
                (:file "histogram-pane")
                (:file "2d-grid-pane")
                (:file "2d-histogram-pane")
                (:file "scatter-pane")
+               ;; widgets
+               (:file "label")
                (:file "plot")))
 
 (defsystem #:gurafu/protocol

@@ -22,6 +22,18 @@ when I have to refer to Mathematica's =Plot=, or
 Python's =matplotlib=, I shall consider adding
 similar functionality into GURAFU. 
 
+** Overview
+The GURAFU =plot= is like to be presented like below:
+1. background rectangle: color sepcified with =:background-color= parameter
+2. plot-panes: using =add-plot-data= macro or =add-plot-pane= method to
+   add a =plot-pane= to plot, which will be draw first if last added
+3. decorator: using =add-plot-decorator= macro to add widgets to plot,
+   samely which will be draw first if last added
+4. frame around ticks:
+   + ticks number could be set seperately using =:x-ticks= and =:y-ticks=
+   + tick value are presented in precision at =:tick-precise=
+   + the tick label is set seperately using =:x-label= and =:y-label=
+
 ** Simple Plots
 You could just try:
 
@@ -155,6 +167,30 @@ Also, you may try some more plot pane types:
   #+RESULTS: scatter-pane
   [[file:./demo-img/scatter-pane-demo.png]]
 
+** Decorators
++ =label= for add a text at plot
+
+  #+name: label-demo
+  #+header: :var out-path="./demo-img/label-demo.png"
+  #+begin_src lisp :exports both :results file
+    (in-package :gurafu)
+
+    (with-present-to-file
+        (plot plot :margin 10 :y-min -2)
+        (out-path)
+      (add-plot-data plot (line-plot-pane square :color +大红官绿+)
+        (loop for x from -5 to 5 by 0.1
+              collect (list x (* x x))))
+      (add-plot-decorator (plot min-point label 0 0)
+        :label "y min at x = 0")
+      (add-plot-decorator (plot plot-center label :uv 0.5 0.5)
+        :label "Center of plot"))
+    out-path
+  #+end_src
+
+  #+RESULTS: label-demo
+  [[file:./demo-img/label-demo.png]]
+
 ** More Demo Indepth
 Here are (is) something I use for my homework report,
 but please note that this these maybe written for a every
@@ -190,7 +226,7 @@ Here are some little developing memos about GURAFU:
 ** Road Map
 + decorator widgets on plot
 
-  labels, legends, ...
+  +labels+, color map, legends, ...
 + +rewrite protocol with closure to simplify code+
 + documentations
   + demos: cltl2 demo

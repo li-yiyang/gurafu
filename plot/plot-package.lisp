@@ -14,7 +14,13 @@
    
    #:rescale-plot-pane
    #:add-plot-pane
-   #:add-plot-data)
+   #:add-plot-data
+   #:add-plot-decorator
+
+   ;; widgets
+   #:label
+   
+   )
   (:documentation
    "The main plot defination for GURAFU. "))
 

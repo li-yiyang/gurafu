@@ -1,5 +1,7 @@
 (in-package :gurafu/plot)
 
+;; ========== framed-axes-mixin ==========
+
 (defclass framed-axes-mixin (margined-mixin)
   ((%x-ticks          :initform 3
                       :initarg :x-ticks)
@@ -17,7 +19,10 @@
    (%x-label          :initform "x"
                       :initarg :x-label)
    (%y-label          :initform "y"
-                      :initarg :y-label)))
+                      :initarg :y-label))
+  (:documentation
+   "The `framed-axes-mixin' is subclass of `margined-mixin'.
+It add a margin-like feature to the object, providing"))
 
 (defmethod set-stream-margins :around
     ((plot framed-axes-mixin) left right bottom top)
@@ -202,10 +207,17 @@ To add a data to `plot', use `add-plot-pane' or `add-plot-data':
          (with-slots (%decorators %plot-panes) plot
            (set-stream-bounding-box %decorators left right bottom top)
            (set-stream-bounding-box %plot-panes left right bottom top))))
-  (defmethod initialize-instance :after ((plot plot) &key)
+  (defmethod initialize-instance :after
+      ((plot plot) &key (x-min -1) (x-max 1) (y-min -1) (y-max 1))
+    ;; set xy-bounding-box for `%plot-panes'
+    (set-xy-bounding-box (slot-value plot '%plot-panes)
+                         x-min x-max y-min y-max)
+    ;; re-align inner `%plot-panes' and `%decorators'
     (multiple-value-bind (left right bottom top)
         (stream-box plot)
-      (re-align plot left right bottom top)))
+      (re-align plot left right bottom top)
+      ))
+  
   (defmethod set-stream-box :after
       ((plot plot) left right bottom top)
     (re-align plot left right bottom top)))
@@ -239,25 +251,61 @@ To add a data to `plot', use `add-plot-pane' or `add-plot-data':
 
 ;; ========== add-plot-decorator ==========
 
-(defgeneric add-plot-decorator (plot name u-x v-y decorator &optional xy?)
+(defgeneric add-to-plot-decorator (plot name u-x v-y decorator &optional xy?)
   (:documentation
    "Add a `decorator' with `name' to `plot'.
 If `xy?' (default `nil'), then use x-y coordinates for add plot. "))
 
-(defmethod add-plot-decorator
+(defmethod add-to-plot-decorator
     ((plot plot) name u-x v-y decorator &optional (xy? nil))
-  (with-slots (%decorators %plot-panes) plot
-    (multiple-value-bind (left right bottom top)
-        (stream-bounding-box decorator)
-      (if xy?
-          (set-stream-bounding-box decorator
-                                   (+ u-x left) (+ u-x right)
-                                   (+ v-y bottom) (+ v-y top))
-          (with-xy-to-uv %plot-panes
-              ((u v) (u-x v-y))
-            (set-stream-bounding-box decorator
-                                     (+ u left) (+ u right)
-                                     (+ v bottom) (+ v top)))))))
+  (cond (xy?
+         (with-xy-to-uv (slot-value plot '%plot-panes)
+             ((u v) (u-x v-y))
+           (multiple-value-bind (left right bottom top)
+               (stream-box plot)
+             (add-component (slot-value plot '%decorators)
+                            name decorator
+                            (float (/ (- u left) (- right left)))
+                            (float (/ (- v top) (- bottom top)))))))
+        ((and (floatp u-x) (floatp v-y)
+              (<= 0.0 u-x 1.0) (<= 0.0 v-y 1.0))
+         (add-component (slot-value plot '%decorators)
+                        name decorator u-x v-y))
+        (t
+         (multiple-value-bind (left right bottom top)
+             (stream-box plot)
+           (let ((u-w (float (/ u-x (- right left))))
+                 (v-w (float (/ v-y  (- bottom top)))))
+             (add-component (slot-value plot '%decorators)
+                            name decorator u-w v-w)
+             (when (or (> u-w 1) (< u-w 0)
+                       (> v-w 1) (< v-w 0))
+               (warn (format
+                      nil
+                      "Added decorator (~,3f, ~,3f) may outside of the plot. "
+                      u-w v-w))))))))
+
+;; ========== add-plot-decorator ==========
+
+(defmacro add-plot-decorator ((plot name type &rest coordinate) &rest init-args)
+  "Add plot decorator to `plot' with `name' at `coordinate'.
+The `coordinate' could be like:
++ `x', `y' (default use x-y coodrinates)
++ `:xy', `x', `y'
++ `:uv', `u', `v'
+  if `u' and `v' are float between 0 and 1, will be used as a scale
+
+The `init-args' should be used for init the decorator."
+  (let ((a (first  coordinate))
+        (b (second coordinate))
+        (c (third  coordinate)))
+    (if c
+        `(add-to-plot-decorator ,plot ',name ,b ,c
+                                (make-instance ',type ,@init-args)
+                                ,(ecase a (:xy t) (:uv nil)))
+        `(add-to-plot-decorator ,plot ',name ,a ,b
+                                (make-instance ',type ,@init-args)
+                                t))))
 
 ;; ========== get-plot-pane ==========
 
@@ -267,6 +315,15 @@ If `xy?' (default `nil'), then use x-y coordinates for add plot. "))
 
 (defmethod get-plot-pane ((plot plot) name)  
   (get-component (slot-value plot '%plot-panes) name))
+
+;; ========== get-plot-decorator ==========
+
+(defgeneric get-plot-decorator (plot name)
+  (:documentation
+   "Get the plot dcorator with `name' in `plot'. "))
+
+(defmethod get-plot-decorator ((plot plot) name)
+  (get-component (slot-value plot '%decorators) name))
 
 ;; ========== present ==========
 

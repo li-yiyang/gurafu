@@ -1,5 +1,5 @@
 (defpackage :gurafu
-  (:use :cl :gurafu/core :gurafu/plot)
+  (:use :cl :gurafu/core :gurafu/plot :trivial-indent)
   (:export
    ;; closure
    #:*pen-width*
