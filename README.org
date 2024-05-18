@@ -72,7 +72,7 @@ Also, you may try some more plot pane types:
     (in-package :gurafu)
 
     (with-present-to-file
-        (plot plot :margin 10)
+        (plot plot :margin 10 :y-min 0)
         (out-path :width 400 :height 400)
       (add-plot-data plot
           (histogram-pane sin :color +莲红+)
