@@ -316,6 +316,22 @@ The `init-args' should be used for init the decorator."
 (defmethod get-plot-pane ((plot plot) name)  
   (get-component (slot-value plot '%plot-panes) name))
 
+;; ========== loop-plot-pane ==========
+
+(defmacro loop-plot-pane ((plot plot-pane) &body body)
+  "Like `loop-component' for plot-panes in plot. "
+  (alexandria:with-gensyms (plot-panes)
+    `(let ((,plot-panes (slot-value ,plot '%plot-panes)))
+       (loop-components (,plot-panes ,plot-pane)
+         ,@body))))
+
+(defmacro loop-plot-pane-with-name ((plot name plot-pane) &body body)
+  "Like `loop-components-with-name' for plot-panes in plot. "
+  (alexandria:with-gensyms (plot-panes)
+    `(let ((,plot-panes (slot-value ,plot '%plot-panes)))
+       (loop-components-with-name (,plot-panes ,name ,plot-pane)
+         ,@body))))
+
 ;; ========== get-plot-decorator ==========
 
 (defgeneric get-plot-decorator (plot name)

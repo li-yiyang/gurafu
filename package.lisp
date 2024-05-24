@@ -96,6 +96,9 @@
    ;; plot
    #:make-linear-color-mapper
 
+   #:label
+   #:legend
+
    #:basic-plot-pane
    #:line-plot-pane
    #:histogram-pane
@@ -108,4 +111,6 @@
    #:rescale-plot-pane
    #:add-plot-pane
    #:add-plot-data
+   #:add-plot-decorator
+   #:add-plot-legend
    ))

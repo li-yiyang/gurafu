@@ -15,6 +15,7 @@
   :pathname "plot"
   :depends-on (:gurafu/core)
   :components ((:file "plot-package")
+               
                ;; plot-panes
                (:file "basic-plot-pane")
                (:file "line-plot-pane")
@@ -22,8 +23,11 @@
                (:file "2d-grid-pane")
                (:file "2d-histogram-pane")
                (:file "scatter-pane")
+               
                ;; widgets
                (:file "label")
+               (:file "legends")
+
                (:file "plot")))
 
 (defsystem #:gurafu/protocol

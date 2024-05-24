@@ -190,6 +190,34 @@ Also, you may try some more plot pane types:
 
   #+RESULTS: label-demo
   [[file:./demo-img/label-demo.png]]
++ =legend= for plot legends
+
+  #+name: legend-demo
+  #+header: :var out-path="./demo-img/legend-demo.png"
+  #+begin_src lisp :exports both :results file
+    (in-package :gurafu)
+
+    (with-present-to-file
+        (plot plot :margin 10)
+        (out-path :width 400 :height 400)
+      (add-plot-data plot
+        (line-plot-pane sin :color +大红+)
+        (loop for x from -10.0 upto 10.0 by 0.1
+              collect (list x (sin x))))
+      (add-plot-data plot
+        (line-plot-pane cos :color +鹅黄+)
+        (loop for x from -10.0 upto 10.0 by 0.1
+              collect (list x (cos x))))
+      (add-plot-legend (plot :position :top-right
+                             :padding 0.02)
+        ("Sin(x)" :color +大红+)
+        ("Cos(x)" :color +鹅黄+)))
+
+    out-path
+  #+end_src
+
+  #+RESULTS: legend-demo
+  [[file:./demo-img/legend-demo.png]]
 
 ** More Demo Indepth
 Here are (is) something I use for my homework report,
@@ -212,7 +240,7 @@ Here are some little developing memos about GURAFU:
 + more graph styles
 + make GURAFU more easy to use
 + get it a good documentation
-
+  
 ** Naming Conventions
 + GURAFU class slot variables should be prefixed with =%=,
   for example =%backend=, =%width=, =%height=;
@@ -228,6 +256,15 @@ Here are some little developing memos about GURAFU:
 
   +labels+, color map, legends, ...
 + +rewrite protocol with closure to simplify code+
++ rewrite the plot-pane, I should add a abstract map-over-data
+  mechanics to make the developing experience same for all
+  most any plot data.
+
+  the propose will be like this:
+  + a =for-every-data= like method for sequencial data types
+    (=list=, =array= and so on);
+  + a =plot-data= class to hold arbitrary plot data, together
+    with some basic stastics and analyise methods
 + documentations
   + demos: cltl2 demo
   + api manual
@@ -235,6 +272,7 @@ Here are some little developing memos about GURAFU:
 + other backends
 
   html, svg, ...
++ more =plot-pane= (this should after I finish the =plot-data= rewrite)
 
 * Historical Codes
 This codes maybe outdated, so may not work. Or these codes need

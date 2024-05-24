@@ -1,5 +1,7 @@
 (defpackage :gurafu/plot
   (:use :cl :gurafu/core)
+  (:import-from :alexandria
+                :with-gensyms)
   (:export
    #:make-linear-color-mapper
 
@@ -19,7 +21,8 @@
 
    ;; widgets
    #:label
-   
+   #:legend
+   #:add-plot-legend
    )
   (:documentation
    "The main plot defination for GURAFU. "))
