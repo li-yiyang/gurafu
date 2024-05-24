@@ -44,7 +44,7 @@ For `present' method, every time presenting the component of a
 `layout-presentation', it would iter through the `%components',
 and apply `present' on each component. "))
 
-;; ========== layout-presentation ==========
+;; ========== (present layout-presentation) ==========
 ;; The `present' method for `layout-presentation'
 ;; just present the `%components' respectively.
 ;; 
@@ -58,8 +58,6 @@ and apply `present' on each component. "))
 
 ;; ========== get-component ==========
 
-(declaim (inline get-component))
-
 (defgeneric get-component (layout name)
   (:documentation
    "Get the component of `stream' with `name'. "))
@@ -72,8 +70,6 @@ and apply `present' on each component. "))
 ;; weights for how the component is layouted.
 ;; 
 ;; Use `declaim-weights' to set the `layout-presentation'.
-
-(declaim (inline check-weights))
 
 (defgeneric check-weights (layout weights)
   (:documentation
@@ -93,7 +89,14 @@ and apply `present' on each component. "))
 (defgeneric add-component (stream name component &rest weights)
   (:documentation
    "Add `component' to `stream' as `name' with `weights'.
-The component will be append to the end of `%components-weights'. "))
+
+The component name and weights will be append to the end of `%components-weights',
+and the component itself will be stored into `%components' hash-table, with
+its name as indexing key.
+
+After the `component' is added to `stream', it will be resized via
+`rescale-component' method. Each `layout-presentation' will know how to
+rescale the compnent, making it align right. "))
 
 (defmethod add-component
     ((stream layout-presentation) name component &rest weights)
@@ -127,6 +130,7 @@ The component will be append to the end of `%components-weights'. "))
 ;; ========== loop-components ==========
 ;; Should use `loop-components' (recommanded).
 ;; `loop-components-name' should only be used for developing usage...
+;; but use `loop-components-with-name'.
 
 (defmacro loop-components-name ((layout comp-name &rest weight-vars) &body body)
   "Loop through the components of `layout'. "
@@ -135,6 +139,18 @@ The component will be append to the end of `%components-weights'. "))
            with ,components = (slot-value ,layout '%components)
            
            for (,comp-name ,@weight-vars) in ,weights           
+
+           do (progn ,@body))))
+
+(defmacro loop-components-with-name
+    ((layout name comp-var &rest weight-vars) &body body)
+  "Loop through the components of `layout' with name. "
+  (with-gensyms (weights components)
+    `(loop with ,weights = (slot-value ,layout '%components-weights)
+           with ,components = (slot-value ,layout '%components)
+           
+           for (,name ,@weight-vars) in ,weights
+           for ,comp-var = (gethash ,name ,components)
 
            do (progn ,@body))))
 
@@ -189,13 +205,31 @@ The `w-weight', `h-weight' is the stacked size for the compoent. "))
   (let ((w-len (length weights)))
     (multiple-value-bind (left right bottom top)
         (stream-bounding-box component)
-      (ecase w-len
-        (0 (call-next-method stack name component
-                             0 0 (- right left) (- bottom top)))
-        (2 (call-next-method stack name component
-                             (first weights) (second weights)
-                             (- right left)  (- bottom top)))
-        (4 (call-next-method))))))
+      (let ((width (stream-box-width stack))
+            (height (stream-box-height stack)))
+        (ecase w-len
+          (0 (call-next-method
+              stack name component
+              0 0
+              (float (/ (- right left) width))
+              (float (/ (- bottom top) height))))
+          (2 (call-next-method
+              stack name component
+              (first weights) (second weights)
+              (float (/ (- right left) width))
+              (float (/ (- bottom top) height))))
+          (4 (macrolet ((floatp* (x)
+                          `(let ((v ,x))
+                             (and (floatp v) (<= 0.0 v 1.0)))))
+               (cond ((and (floatp* (third weights))
+                           (floatp* (fourth weights)))
+                      (call-next-method))
+                     (t
+                      (call-next-method
+                       stack name component
+                       (first weights) (second weights)
+                       (float (/ (- right left) width))
+                       (float (/ (- bottom top) height))))))))))))
 
 ;; ========== rescale-component ==========
 ;; The rescale should relative to top-left.
@@ -225,12 +259,13 @@ The `w-weight', `h-weight' is the stacked size for the compoent. "))
   (:documentation
    "That should be present relative to each content.
 
-The content, which would be remembered in `%cursor-x' and `%cursor-y'."))
+The content, which would be remembered in `%cursor-x' and `%cursor-y'.
+The content should always be the next position where the new component
+should be added.
+"))
 
 ;; ========== reset-content ==========
 ;; Normally, this should move to top left.
-
-(declaim (inline reset-content))
 
 (defgeneric reset-content (layout)
   (:documentation
@@ -248,21 +283,32 @@ The content, which would be remembered in `%cursor-x' and `%cursor-y'."))
 ;; Every subclass of `content-relative-layout-presentation'
 ;; should give their own `update-content-info' method.
 
-(declaim (inline update-content-info))
-
 (defgeneric update-content-info (layout weights)
   (:documentation
    "Update `layout' content with `weights'. "))
 
 ;; ========== lazy-rescale-component ==========
 ;; Rescale component respect to current cursor infomation.
-
-(declaim (inline lazy-rescale-component))
+;; lazy-rescale-component should use only current cursor position.
 
 (defgeneric lazy-rescale-component (layout name &rest weights)
   (:documentation
    "Rescale component with `name' without re-initialize contents.
 After `lazy-rescale-component', the content infomation would updated. "))
+
+;; ========== add-component ==========
+
+(defmethod add-component
+    ((stream content-relative-layout-presentation) name component &rest weights)
+  (check-weights stream weights)
+  (with-slots (%components %components-weights) stream
+    ;; register components to the end of `%components-weights'
+    (setf %components-weights
+          (nconc %components-weights (list (cons name weights))))
+
+    ;; add components to the `%components'
+    (setf (gethash name %components) component))
+  (apply #'lazy-rescale-component stream name weights))
 
 ;; ========== set-stream-bounding-box ==========
 ;; In order to calculate and update content faster, use `lazy-rescale-component',
@@ -274,7 +320,8 @@ After `lazy-rescale-component', the content infomation would updated. "))
   (declare (ignore left right bottom top))
   (reset-content layout)
   (loop-components-name (layout name . weights)
-    (apply #'lazy-rescale-component layout name weights))
+    (apply #'lazy-rescale-component layout name weights)
+    (update-content-info layout weights))
   (reset-content layout))
 
 ;; ========== rescale-component ==========
@@ -369,8 +416,8 @@ The `weight' is the horizontal weight for the component;
 
 ;; ========== flow-layout-presentation ==========
 
-(defclass vertical-flow-layout-presentation (content-relative-layout-presentation
-                                             auto-enlarge-backend-mixin)
+(defclass vertical-flow-layout-presentation
+    (content-relative-layout-presentation)
   ()
   (:documentation
    "That should be presented vertically.
@@ -396,7 +443,8 @@ it would rescale all the components in ratio.
 (defmethod add-component :around
     ((flow vertical-flow-layout-presentation) name component &rest weights)
   (let ((height (or (first weights) (stream-bounding-box-height component))))
-    (call-next-method flow name component height)))
+    (call-next-method flow name component height)
+    (update-content-info flow (list height))))
 
 (defmethod update-content-info
     ((flow vertical-flow-layout-presentation) weights)
@@ -409,23 +457,23 @@ it would rescale all the components in ratio.
       (stream-box flow)
     (with-slots (%cursor-y) flow
       (let ((component (get-component flow name)))
-        (multiple-value-bind (c-left c-right c-bottom c-top)
-            (stream-bounding-box component)
-          (let* ((height   (first weights))
-                 (scale    (/ height (- c-bottom c-top)))
-                 (c-right  (+ left (truncate (* scale (- c-right c-left)))))
-                 (c-top    (+ top %cursor-y))
-                 (c-bottom (+ c-top height)))
-            (set-stream-bounding-box component left c-right c-bottom c-top)
-            (when (or (> c-right right) (> c-bottom bottom))
-              (set-stream-box flow
-                              left (max c-right right) (max c-bottom bottom) top))
-            (setf %cursor-y c-bottom)))))))
+        (let* ((height   (first weights))
+               (scale    (float
+                          (/ height (stream-bounding-box-height component))))
+               (width    (truncate
+                          (* scale (stream-bounding-box-width component))))
+               (n-right  (+ left width))
+               (n-top    (+ %cursor-y top))
+               (n-bottom (+ n-top height)))
+          (set-stream-bounding-box component left n-right n-bottom n-top)
+          (when (or (> n-right right) (> n-bottom bottom))
+            (set-stream-box flow
+              left (max n-right right) (max n-bottom bottom) top)))))))
 
 ;; ========== horizontal-flow-layout-presentation ==========
 
-(defclass horizontal-flow-layout-presentation (content-relative-layout-presentation
-                                               auto-enlarge-backend-mixin)
+(defclass horizontal-flow-layout-presentation
+    (content-relative-layout-presentation)
   ()
   (:documentation
    "That should be presented vertically.

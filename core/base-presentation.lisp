@@ -115,7 +115,16 @@ which is quite low-level... Not recommanded. "))
                               font-size font-name char-spacing
                               line-width line-spacing
                             &allow-other-keys)
-  (:documentation "Get text size when drawing on `obj'. "))
+  (:documentation
+   "Get text size when drawing on `obj'.
+Return text bounding sizes width and height.
+
+Example usage:
+
+  (multiple-value-bind (width height)
+      (draw-text-size obj text)
+    (do-something-with-the-text))
+"))
 
 (defgeneric draw-text (obj x y text
                        &key color

@@ -110,6 +110,7 @@
    #:get-component
    #:add-component
    #:loop-components
+   #:loop-components-with-name
 
    ;; define-presentation
    #:define-presentation
