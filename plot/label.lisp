@@ -47,7 +47,7 @@
 (defmethod present ((label label))
   (with-slots (%label %color %font-size) label
     (draw-text label 0 0 %label
-               :color %color
-               :font-size %font-size
+               :color      %color
+               :font-size  %font-size
                :text-align :normal
                :line-width (stream-box-width label))))

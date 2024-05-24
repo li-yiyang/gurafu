@@ -114,7 +114,7 @@ Return values are outer edge left, right, bottom, top of the uv box. "))
    "Get the height of `stream' bounding box. "))
 
 (defmethod stream-bounding-box-height ((stream coordinated-box))
-  (stream-box stream))
+  (stream-box-height stream))
 
 ;; ========== stream-bounding-box-width ==========
 
