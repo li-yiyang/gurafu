@@ -25,11 +25,6 @@
                              (got min second y-min)
                              (got max second y-max))))))
 
-;; ========== initialize-instance ==========
-
-(defmethod initialize-instance :after ((plot scatter-pane) &key)
-  (rescale-plot-pane plot))
-
 ;; ========== present ==========
 
 (defmethod present ((scatter scatter-pane))

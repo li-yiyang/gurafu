@@ -43,7 +43,7 @@ You could just try:
   (in-package :gurafu)
 
   (with-present-to-file
-      (plot plot :margin 10)
+      (plot plot :margin 10 :x-min -10.0 :x-max 10.0)
       (out-path :width 400 :height 400)
     (add-plot-data plot
         (line-plot-pane sin :color +yellow+)
@@ -72,7 +72,9 @@ Also, you may try some more plot pane types:
     (in-package :gurafu)
 
     (with-present-to-file
-        (plot plot :margin 10 :y-min 0)
+        (plot plot :margin 10
+                   :y-min 0 :y-max 40
+                   :x-min -300 :x-max 300)
         (out-path :width 400 :height 400)
       (add-plot-data plot
           (histogram-pane sin :color +莲红+)
@@ -97,7 +99,9 @@ Also, you may try some more plot pane types:
     (in-package :gurafu)
 
     (with-present-to-file
-        (plot plot :margin 20)
+        (plot plot :margin 20
+                   :x-min -10 :x-max 10
+                   :y-min -10 :y-max 10)
         (out-path :width 400 :height 400)
       (add-plot-data plot
           (2d-grid-pane grid :color (make-linear-color-mapper +white+ +银红+))
@@ -119,7 +123,9 @@ Also, you may try some more plot pane types:
     (in-package :gurafu)
 
     (with-present-to-file
-        (plot plot :margin 20)
+        (plot plot :margin 20
+                   :x-min -1 :x-max 1
+                   :y-min -1 :y-max 1)
         (out-path :width 400 :height 400)
       (add-plot-data plot
           (2d-histogram-pane arc :color (make-linear-color-mapper +white+ +翠蓝+))
@@ -145,7 +151,9 @@ Also, you may try some more plot pane types:
     (in-package :gurafu)
 
     (with-present-to-file
-        (plot plot :margin 20)
+        (plot plot :margin 20
+                   :x-min -2 :x-max 2
+                   :y-min 0 :y-max 4)
         (out-path :width 400 :height 400)
       (add-plot-data plot
           (scatter-pane pesudo-data :point-style :cross
@@ -158,8 +166,7 @@ Also, you may try some more plot pane types:
       (add-plot-data plot
           (line-plot-pane fit :color +大红+)
         (loop for x from -2 upto 2 by 0.01
-              collect (list x (* x x))))
-      (set-xy-bounding-box plot -2 2 -0.5 5))
+              collect (list x (* x x)))))
 
     out-path
   #+end_src
@@ -176,7 +183,9 @@ Also, you may try some more plot pane types:
     (in-package :gurafu)
 
     (with-present-to-file
-        (plot plot :margin 10 :y-min -2)
+        (plot plot :margin 10
+                   :y-min -2 :y-max 25
+                   :x-min -5 :x-max 5)
         (out-path)
       (add-plot-data plot (line-plot-pane square :color +大红官绿+)
         (loop for x from -5 to 5 by 0.1
@@ -198,7 +207,9 @@ Also, you may try some more plot pane types:
     (in-package :gurafu)
 
     (with-present-to-file
-        (plot plot :margin 10)
+        (plot plot :margin 10
+                   :x-min -10 :x-max 10
+                   :y-min -1 :y-max 1)
         (out-path :width 400 :height 400)
       (add-plot-data plot
         (line-plot-pane sin :color +大红+)
@@ -254,8 +265,9 @@ Here are some little developing memos about GURAFU:
 ** Road Map
 + decorator widgets on plot
 
-  +labels+, color map, legends, ...
+  +labels+, color map, +legends+, ...
 + +rewrite protocol with closure to simplify code+
++ auto detect plot =xy-bounding-box= size
 + rewrite the plot-pane, I should add a abstract map-over-data
   mechanics to make the developing experience same for all
   most any plot data.

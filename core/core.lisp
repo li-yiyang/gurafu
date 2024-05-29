@@ -94,6 +94,11 @@
    #:draw-line
 
    ;; xy-box-present
+   #:*x-min*
+   #:*x-max*
+   #:*y-min*
+   #:*y-max*
+   
    #:xy-box-mixin
    #:xy-box-present
    #:with-xy-to-uv

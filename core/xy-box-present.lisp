@@ -1,12 +1,24 @@
 (in-package :gurafu/core)
 
+(defparameter *x-min* 0.0
+  "Default x-min value. ")
+
+(defparameter *x-max* 1.0
+  "Default x-min value. ")
+
+(defparameter *y-min* 0.0
+  "Default x-min value. ")
+
+(defparameter *y-max* 1.0
+  "Default x-min value. ")
+
 ;; ========== xy-box-mixin ==========
 
 (defclass xy-box-mixin ()
-  ((%x-min :initform 0.0 :initarg :x-min)
-   (%x-max :initform 1.0 :initarg :x-max)
-   (%y-min :initform 0.0 :initarg :y-min)
-   (%y-max :initform 1.0 :initarg :y-max)
+  ((%x-min :initform *x-min* :initarg :x-min)
+   (%x-max :initform *x-max* :initarg :x-max)
+   (%y-min :initform *y-min* :initarg :y-min)
+   (%y-max :initform *y-max* :initarg :y-max)
    
    (%xy-to-uv-trans :reader %xy-to-uv-trans)
    (%uv-to-xy-trans :reader %uv-to-xy-trans))

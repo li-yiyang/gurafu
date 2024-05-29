@@ -52,21 +52,6 @@ result may loss the `max' point of `hist-data'."
     (setf %plot-data (hist-to-plot-data %histogram-data %histogram-bins
                                         x-min x-max))))
 
-;; ========== initialize-instance ==========
-
-(defmethod initialize-instance :after ((hist histogram-pane) &key (y-min 0))
-  (declare (ignore y-min))
-  (multiple-value-bind (x-min x-max y-min y-max)
-      (xy-bounding-box hist)
-    (with-slots (%histogram-data %histogram-bins %plot-data) hist
-      (let ((x-min (min x-min (apply #'min %histogram-data)))
-            (x-max (max x-max (apply #'max %histogram-data))))
-        ;; Not so good code, will calculate the histogram twice... 
-        (set-xy-bounding-box hist x-min x-max y-min y-max)
-        (let ((y-min (min y-min (apply #'min (mapcar #'second %plot-data))))
-              (y-max (max y-max (apply #'max (mapcar #'second %plot-data)))))
-          (set-xy-bounding-box hist x-min x-max y-min y-max))))))
-
 ;; ========== present ==========
 
 (defmethod present ((hist histogram-pane))

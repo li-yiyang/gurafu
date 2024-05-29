@@ -129,6 +129,7 @@ its component of `plot-panes' should be `plot-pane'. "))
     (set-xy-bounding-box plot-pane x-min x-max y-min y-max)))
 
 ;; ========== rescale-plot-pane ==========
+;; deprecated, this will make the plot return horrible poor plot...
 
 (defmethod rescale-plot-pane ((plot-panes plot-panes))
   (multiple-value-bind (x-min x-max y-min y-max)
@@ -152,8 +153,10 @@ its component of `plot-panes' should be `plot-pane'. "))
   (unless (typep plot-pane 'basic-plot-pane)
     (warn (format nil "~a may not be subclass of `basic-plot-pane'."
                   (type-of plot-pane))))
-  (add-component plot-panes name plot-pane 0.0 0.0 1.0 1.0)
-  (rescale-plot-pane plot-panes))
+  (multiple-value-bind (x-min x-max y-min y-max)
+      (xy-bounding-box plot-panes)
+    (set-xy-bounding-box plot-pane x-min x-max y-min y-max))
+  (add-component plot-panes name plot-pane 0.0 0.0 1.0 1.0))
 
 ;; ========== plot ==========
 

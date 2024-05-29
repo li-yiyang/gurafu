@@ -28,11 +28,6 @@
        plot (got min first) (got max first)
        (got min second) (got max second)))))
 
-;; ========== initialize-instance ==========
-
-(defmethod initialize-instance :after ((plot line-plot-pane) &key)
-  (rescale-plot-pane plot))
-
 ;; ========== present ==========
 
 (defmethod present ((plot line-plot-pane))

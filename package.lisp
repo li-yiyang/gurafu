@@ -71,6 +71,10 @@
    #:set-stream-bounding-box
 
    ;; xy-bounding-box
+   #:*x-min*
+   #:*x-max*
+   #:*y-min*
+   #:*y-max*
    #:set-xy-bounding-box
    
    ;; presentation
