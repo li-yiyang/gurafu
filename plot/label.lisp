@@ -8,7 +8,9 @@
    (%color        :initform *foreground-color*
                   :initarg :color)
    (%font-size    :initform *font-size*
-                  :initarg :font-size)   
+                  :initarg :font-size)
+   (%line-width   :initform 0
+                  :initarg :line-width)
    (%line-forward :initform *line-forward*)
    (%char-forward :initform *char-forward*)
    (%line-spacing :initform *line-spacing*)
@@ -20,7 +22,9 @@
 ;; reset label height to text height after initialize
 
 (defmethod initialize-instance :after
-    ((label label) &key (text-path '(1.0 0.0) text-path-set?))
+    ((label label) &key (text-path '(1.0 0.0) text-path-set?)
+                     (right 0 right-set?))
+  (declare (ignore right))
   (with-slots (%label %color %font-size
                %line-forward %char-forward
                %line-spacing %char-spacing
@@ -34,13 +38,13 @@
               (*line-forward* %line-forward)
               (*line-spacing* %line-spacing)
               (*char-spacing* %char-spacing)
-              (*font-size*    %font-size))
-          (draw-text-size label %label                          
-                          :line-width (stream-box-width label)))      
-      (declare (ignore width))
+              (*font-size*    %font-size)
+              (line-width (if right-set? (stream-box-width label) 0)))
+          (draw-text-size label %label :line-width line-width))      
       (multiple-value-bind (left right bottom top)
           (stream-box label)
-        (set-stream-box label left right (+ height bottom) top)))))
+        (declare (ignore right))
+        (set-stream-box label left (+ left width) (+ height bottom) top)))))
 
 ;; ========== present ==========
 

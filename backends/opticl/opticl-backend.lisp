@@ -388,7 +388,7 @@ if not given `line-width', default assuming infinite long line. "
         do (incf v (truncate (* width forward-v)))
 
         ;; move to next line if overflow line-width
-        if (or (equal c #\Newline)
+        if (or (char= c #\Newline)
                (and (> line-width 0)
                     (> u line-width)))
           do (setf line-u (+ line-u forline-u)
@@ -530,11 +530,13 @@ To draw a char:
 
           with (cursor-u cursor-v) = (list u0 v0)
           with (line-u   line-v)   = (list u0 v0)
-
+          
           with (forward-u forward-v) = *char-forward*
 
           with (forline-u forline-v)
             = (mapcar #'truncate (num-list font-size *line-forward*))
+
+          with current-line-width = 0
 
           for c in char-list
           for char = (get-char *opticl-default-font*
@@ -542,14 +544,16 @@ To draw a char:
           for width = (char-width char scale)
           for (move-u move-v) = (list (truncate (* width forward-u))
                                       (truncate (* width forward-v)))
-
+          
           do (cond ((or (char= c #\Newline)
                         (and (> line-width 0)
-                             (> (+ cursor-u move-u) line-width)))
+                             (> current-line-width line-width)))
                     (setf line-u (+ line-u forline-u)
-                          line-v (+ line-v forline-v))
+                          line-v (+ line-v forline-v)
+                          current-line-width 0)
                     (setf cursor-u line-u
                           cursor-v line-v))
                    (t (draw-char img cursor-u cursor-v char scale color)
                       (incf cursor-u move-u)
-                      (incf cursor-v move-v))))))
+                      (incf cursor-v move-v)
+                      (incf current-line-width move-u))))))
