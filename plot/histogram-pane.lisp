@@ -32,6 +32,8 @@ result may loss the `max' point of `hist-data'."
   (:documentation
    "Draw the histogram plot. "))
 
+(def-plot-pane-scale histogram-pane :normal :log-log)
+
 ;; ========== rescale-plot-pane ==========
 
 (defmethod rescale-plot-pane ((hist histogram-pane))

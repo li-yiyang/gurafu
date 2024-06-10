@@ -29,7 +29,9 @@
    (%plot-data)
    (%histogram-bins :initform 100 :initargs :bins)))
 
-(defmethod initialize-instance :after ((2d-hist 2d-histogram-pane)
+(def-plot-pane-scale 2d-histogram-pane :normal :log-log)
+
+(defmethod reinitialize-instance :after ((2d-hist 2d-histogram-pane)
                                        &key)
   (multiple-value-bind (x-min x-max y-min y-max)
       (xy-bounding-box 2d-hist)

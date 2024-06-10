@@ -10,6 +10,8 @@
   (:documentation
    "This is 2d scatter plot pane. "))
 
+(def-plot-pane-scale scatter-pane :normal :log-log)
+
 ;; ========== rescale-plot-pane ==========
 
 (defmethod rescale-plot-pane ((scatter scatter-pane))

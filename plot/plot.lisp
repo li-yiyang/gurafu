@@ -112,13 +112,18 @@ It add a margin-like feature to the object, providing"))
 
 ;; ========== plot-panes ==========
 
-(defclass plot-panes (stack-layout-presentation
-                      xy-box-mixin)
-  ()
+(defclass plot-panes (stack-layout-presentation)
+  (%scale)
   (:documentation
    "The `plot-panes' is a collection of `plot-pane' objects.
 The `plot-panes' is `stack-layout-presentation' subclass object,
 its component of `plot-panes' should be `plot-pane'. "))
+
+(defclass normal-plot-panes (plot-panes xy-box-mixin)
+  ((%scale :initform :normal)))
+
+(defclass log-log-plot-panes (plot-panes log-log-xy-box-mixin)
+  ((%scale :initform :log-log)))
 
 ;; ========== set-xy-bounding-box ==========
 ;; reset inner `plot-pane' object xy-bounding-box
@@ -135,6 +140,7 @@ its component of `plot-panes' should be `plot-pane'. "))
   (multiple-value-bind (x-min x-max y-min y-max)
       (xy-bounding-box plot-panes)
     (loop-components (plot-panes plot-pane)
+      (rescale-plot-pane plot-pane)
       (multiple-value-bind (a-min a-max b-min b-max)
           (xy-bounding-box plot-pane)
         (setf x-min (min x-min a-min)
@@ -153,6 +159,7 @@ its component of `plot-panes' should be `plot-pane'. "))
   (unless (typep plot-pane 'basic-plot-pane)
     (warn (format nil "~a may not be subclass of `basic-plot-pane'."
                   (type-of plot-pane))))
+  (to-scale plot-pane (slot-value plot-panes '%scale))
   (multiple-value-bind (x-min x-max y-min y-max)
       (xy-bounding-box plot-panes)
     (set-xy-bounding-box plot-pane x-min x-max y-min y-max))
@@ -162,7 +169,7 @@ its component of `plot-panes' should be `plot-pane'. "))
 
 (defclass plot (base-presentation
                 framed-axes-mixin)
-  ((%plot-panes :initform (make-instance 'plot-panes))
+  ((%plot-panes :initform (make-instance 'normal-plot-panes))
    (%decorators :initform (make-instance 'stack-layout-presentation))
    (%background-color :initform *background-color*
                       :initarg :background-color))

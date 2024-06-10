@@ -103,6 +103,7 @@
    #:x-log-xy-box-mixin
    #:y-log-xy-box-mixin
    #:log-log-xy-box-mixin
+   #:box-present
    #:xy-box-present
    #:x-log-box-present
    #:y-log-box-present

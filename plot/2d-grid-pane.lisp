@@ -18,6 +18,8 @@ Return a function. "
   (:documentation
    "Draw a 2d grid on pane. "))
 
+(def-plot-pane-scale 2d-grid-pane :normal :log-log)
+
 ;; ========== initialize-instance ==========
 
 (defmethod initialize-instance :after ((grid 2d-grid-pane)

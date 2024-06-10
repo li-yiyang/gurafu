@@ -93,16 +93,6 @@ Return values are `x-min', `x-max', `y-min', `y-max'. "))
 (defgeneric update-xy-to-uv (stream)
   (:documentation "Update the xy to uv transformations. "))
 
-(defun make-xy-to-uv-trans (%x-min %x-max %y-min %y-max
-                            left right bottom top)
-  "Make a xy to uv transformer function. "
-  )
-
-(defun make-uv-to-xy-trans (%x-min %x-max %y-min %y-max
-                            left right bottom top)
-  "Make a uv to xy transformer function. "
-  )
-
 (defmethod update-xy-to-uv ((stream xy-box-mixin))
   (with-slots (%x-min %x-max %y-min %y-max) stream
     (multiple-value-bind (left right bottom top)
@@ -133,6 +123,11 @@ Return values are `x-min', `x-max', `y-min', `y-max'. "))
 
 ;; ========== initialize-instance ==========
 (defmethod initialize-instance :after
+    ((obj xy-box-mixin) &key)
+  (update-xy-to-uv obj)
+  (update-uv-to-xy obj))
+
+(defmethod reinitialize-instance :after
     ((obj xy-box-mixin) &key)
   (update-xy-to-uv obj)
   (update-uv-to-xy obj))
