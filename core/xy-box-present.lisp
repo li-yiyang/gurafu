@@ -23,7 +23,7 @@
    (%xy-to-uv-trans :reader %xy-to-uv-trans)
    (%uv-to-xy-trans :reader %uv-to-xy-trans))
   (:documentation
-   "This class defines how th coordinate is transformed,
+   "This class defines how the coordinate is transformed,
 which handles how the user set position `x', `y' is mapped
 to digital plotting `u', `v'.
 
@@ -87,63 +87,193 @@ Return values are `x-min', `x-max', `y-min', `y-max'. "))
   (:documentation
    "Set the xy bounding box for `stream'. "))
 
-(flet ((update-xy-to-uv (stream)
-         (with-slots (%x-min %x-max %y-min %y-max) stream
-           (multiple-value-bind (left right bottom top)
-               (stream-box stream)
-             (let* ((x-scale (float (/ (- right left) (- %x-max %x-min))))
-                    (y-scale (float (/ (- bottom top) (- %y-max %y-min))))
-                    (u0 (- left   (truncate (* x-scale %x-min))))
-                    (v0 (+ bottom (truncate (* y-scale %y-min)))))
-               (declare (integer u0 v0))
-               (setf (slot-value stream '%xy-to-uv-trans)
-                     (lambda (x y)
-                       (values (+ u0 (truncate (* x-scale x)))
-                               (- v0 (truncate (* y-scale y))))))))))
-       
-       (update-uv-to-xy (stream)
-         (with-slots (%x-min %x-max %y-min %y-max) stream
-           (multiple-value-bind (left right bottom top)
-               (stream-box stream)
-             (let* ((u-scale (float (/ (- %x-max %x-min) (- right left))))
-                    (v-scale (float (/ (- %y-max %y-min) (- bottom top))))
-                    (x0 (- %x-min (* u-scale left)))
-                    (y0 (+ %y-max (* v-scale top))))
-               (declare (float x0 y0))
-               (setf (slot-value stream '%uv-to-xy-trans)
-                     (lambda (u v)
-                       (values (+ x0 (* u-scale u))
-                               (- y0 (* v-scale v))))))))))
-  
-  ;; ========== set-xy-bounding-box ==========
-  (defmethod set-xy-bounding-box
-      ((stream xy-box-mixin) x-min x-max y-min y-max)
-    (with-slots (%x-min %x-max %y-min %y-max) stream
-      ;; update xy bounding box
-      (setf %x-min x-min
-            %x-max x-max
-            %y-min y-min
-            %y-max y-max)
-      
-      ;; update `%xy-to-uv-trans'
-      (update-xy-to-uv stream)
+(defgeneric update-uv-to-xy (stream)
+  (:documentation "Update the uv to xy transformations. "))
 
-      ;; update `%uv-to-xy-trans'
-      (update-uv-to-xy stream)))
+(defgeneric update-xy-to-uv (stream)
+  (:documentation "Update the xy to uv transformations. "))
 
-  ;; ========== initialize-instance ==========
-  (defmethod initialize-instance :after
-      ((obj xy-box-mixin) &key)
-    (update-xy-to-uv obj)
-    (update-uv-to-xy obj))
+(defun make-xy-to-uv-trans (%x-min %x-max %y-min %y-max
+                            left right bottom top)
+  "Make a xy to uv transformer function. "
+  )
 
-  ;; ========== set-stream-box ==========
+(defun make-uv-to-xy-trans (%x-min %x-max %y-min %y-max
+                            left right bottom top)
+  "Make a uv to xy transformer function. "
+  )
 
-  (defmethod set-stream-box :after
-      ((obj xy-box-mixin) left right bottom top)
-    (declare (ignore left right bottom top))
-    (update-xy-to-uv obj)
-    (update-uv-to-xy obj)))
+(defmethod update-xy-to-uv ((stream xy-box-mixin))
+  (with-slots (%x-min %x-max %y-min %y-max) stream
+    (multiple-value-bind (left right bottom top)
+        (stream-box stream)
+      (setf (slot-value stream '%xy-to-uv-trans)
+            (let* ((x-scale (float (/ (- right left) (- %x-max %x-min))))
+                   (y-scale (float (/ (- bottom top) (- %y-max %y-min))))
+                   (u0 (- left   (truncate (* x-scale %x-min))))
+                   (v0 (+ bottom (truncate (* y-scale %y-min)))))
+              (declare (integer u0 v0))
+              (lambda (x y)
+                (values (+ u0 (truncate (* x-scale x)))
+                        (- v0 (truncate (* y-scale y))))))))))
+
+(defmethod update-uv-to-xy ((stream xy-box-mixin))
+  (with-slots (%x-min %x-max %y-min %y-max) stream
+    (multiple-value-bind (left right bottom top)
+        (stream-box stream)
+      (setf (slot-value stream '%uv-to-xy-trans)
+            (let* ((u-scale (float (/ (- %x-max %x-min) (- right left))))
+                   (v-scale (float (/ (- %y-max %y-min) (- bottom top))))
+                   (x0 (- %x-min (* u-scale left)))
+                   (y0 (+ %y-max (* v-scale top))))
+              (declare (float x0 y0))
+              (lambda (u v)
+                (values (+ x0 (* u-scale u))
+                        (- y0 (* v-scale v)))))))))
+
+;; ========== initialize-instance ==========
+(defmethod initialize-instance :after
+    ((obj xy-box-mixin) &key)
+  (update-xy-to-uv obj)
+  (update-uv-to-xy obj))
+
+;; ========== set-xy-bounding-box ==========
+(defmethod set-xy-bounding-box
+    ((stream xy-box-mixin) x-min x-max y-min y-max)
+  (with-slots (%x-min %x-max %y-min %y-max) stream
+    ;; update xy bounding box
+    (setf %x-min x-min
+          %x-max x-max
+          %y-min y-min
+          %y-max y-max)
+    
+    ;; update `%xy-to-uv-trans'
+    (update-xy-to-uv stream)
+
+    ;; update `%uv-to-xy-trans'
+    (update-uv-to-xy stream)))
+
+;; ========== set-stream-box ==========
+(defmethod set-stream-box :after
+    ((obj xy-box-mixin) left right bottom top)
+  (declare (ignore left right bottom top))
+  (update-xy-to-uv obj)
+  (update-uv-to-xy obj))
+
+;; ========== x-log-xy-box-mixin ==========
+
+(defclass x-log-xy-box-mixin (xy-box-mixin) ()
+  (:documentation "The x coordinate is transformed in log scale. "))
+
+(defmethod update-uv-to-xy ((stream x-log-xy-box-mixin))
+  (with-slots (%x-min %x-max %y-min %y-max) stream
+    (multiple-value-bind (left right bottom top)
+        (stream-box stream)
+      (let ((%x-min (log %x-min))
+            (%x-max (log %x-max)))
+        (setf (slot-value stream '%uv-to-xy-trans)
+              (let* ((u-scale (float (/ (- %x-max %x-min) (- right left))))
+                     (v-scale (float (/ (- %y-max %y-min) (- bottom top))))
+                     (x0 (- %x-min (* u-scale left)))
+                     (y0 (+ %y-max (* v-scale top))))
+                (declare (float x0 y0))
+                (lambda (u v)
+                  (values (exp (+ x0 (* u-scale u)))
+                          (- y0 (* v-scale v))))))))))
+
+(defmethod update-xy-to-uv ((stream x-log-xy-box-mixin))
+  (with-slots (%x-min %x-max %y-min %y-max) stream
+    (multiple-value-bind (left right bottom top)
+        (stream-box stream)
+      (let ((%x-min (log %x-min))
+            (%x-max (log %x-max)))
+        (setf (slot-value stream '%xy-to-uv-trans)
+              (let* ((x-scale (float (/ (- right left) (- %x-max %x-min))))
+                     (y-scale (float (/ (- bottom top) (- %y-max %y-min))))
+                     (u0 (- left   (truncate (* x-scale %x-min))))
+                     (v0 (+ bottom (truncate (* y-scale %y-min)))))
+                (declare (integer u0 v0))
+                (lambda (x y)
+                  (values (+ u0 (truncate (* x-scale (log x))))
+                          (- v0 (truncate (* y-scale y)))))))))))
+
+;; ========== y-log-xy-box-mixin ==========
+
+(defclass y-log-xy-box-mixin (xy-box-mixin) ()
+  (:documentation "The y coordinate is transformed in log scale. "))
+
+(defmethod update-uv-to-xy ((stream y-log-xy-box-mixin))
+  (with-slots (%x-min %x-max %y-min %y-max) stream
+    (multiple-value-bind (left right bottom top)
+        (stream-box stream)
+      (let ((%y-min (log %y-min))
+            (%y-max (log %y-max)))
+        (setf (slot-value stream '%uv-to-xy-trans)
+              (let* ((u-scale (float (/ (- %x-max %x-min) (- right left))))
+                     (v-scale (float (/ (- %y-max %y-min) (- bottom top))))
+                     (x0 (- %x-min (* u-scale left)))
+                     (y0 (+ %y-max (* v-scale top))))
+                (declare (float x0 y0))
+                (lambda (u v)
+                  (values (+ x0 (* u-scale u))
+                          (exp (- y0 (* v-scale v)))))))))))
+
+(defmethod update-xy-to-uv ((stream y-log-xy-box-mixin))
+  (with-slots (%x-min %x-max %y-min %y-max) stream
+    (multiple-value-bind (left right bottom top)
+        (stream-box stream)
+      (let ((%y-min (log %y-min))
+            (%y-max (log %y-max)))
+        (setf (slot-value stream '%xy-to-uv-trans)
+              (let* ((x-scale (float (/ (- right left) (- %x-max %x-min))))
+                     (y-scale (float (/ (- bottom top) (- %y-max %y-min))))
+                     (u0 (- left   (truncate (* x-scale %x-min))))
+                     (v0 (+ bottom (truncate (* y-scale %y-min)))))
+                (declare (integer u0 v0))
+                (lambda (x y)
+                  (values (+ u0 (truncate (* x-scale x)))
+                          (- v0 (truncate (* y-scale (log y))))))))))))
+
+;; ========== log-log-xy-box-mixin ==========
+
+(defclass log-log-xy-box-mixin (xy-box-mixin) ()
+  (:documentation "The x, y coordinates are transformed in log scale. "))
+
+(defmethod update-uv-to-xy ((stream log-log-xy-box-mixin))
+  (with-slots (%x-min %x-max %y-min %y-max) stream
+    (multiple-value-bind (left right bottom top)
+        (stream-box stream)
+      (let ((%x-min (log %x-min))
+            (%x-max (log %x-max))
+            (%y-min (log %y-min))
+            (%y-max (log %y-max)))
+        (setf (slot-value stream '%uv-to-xy-trans)
+              (let* ((u-scale (float (/ (- %x-max %x-min) (- right left))))
+                     (v-scale (float (/ (- %y-max %y-min) (- bottom top))))
+                     (x0 (- %x-min (* u-scale left)))
+                     (y0 (+ %y-max (* v-scale top))))
+                (declare (float x0 y0))
+                (lambda (u v)
+                  (values (exp (+ x0 (* u-scale u)))
+                          (exp (- y0 (* v-scale v)))))))))))
+
+(defmethod update-xy-to-uv ((stream log-log-xy-box-mixin))
+  (with-slots (%x-min %x-max %y-min %y-max) stream
+    (multiple-value-bind (left right bottom top)
+        (stream-box stream)
+      (let ((%x-min (log %x-min))
+            (%x-max (log %x-max))
+            (%y-min (log %y-min))
+            (%y-max (log %y-max)))
+        (setf (slot-value stream '%xy-to-uv-trans)
+              (let* ((x-scale (float (/ (- right left) (- %x-max %x-min))))
+                     (y-scale (float (/ (- bottom top) (- %y-max %y-min))))
+                     (u0 (- left   (truncate (* x-scale %x-min))))
+                     (v0 (+ bottom (truncate (* y-scale %y-min)))))
+                (declare (integer u0 v0))
+                (lambda (x y)
+                  (values (+ u0 (truncate (* x-scale (log x))))
+                          (- v0 (truncate (* y-scale (log y))))))))))))
 
 ;; ========== with-xy-to-uv ==========
 
@@ -181,13 +311,14 @@ Example:
 
 ;; ========== draw-* functions ==========
 
-(defclass xy-box-present (base-presentation
-                          xy-box-mixin)
-  ()
-  (:documentation
-   ""))
+(defclass box-present            (base-presentation) ())
 
-(defmethod draw-point ((obj xy-box-present) x y
+(defclass xy-box-present         (box-present xy-box-mixin)         ())
+(defclass log-log-xy-box-present (box-present log-log-xy-box-mixin) ())
+(defclass x-log-xy-box-present   (box-present x-log-xy-box-mixin)   ())
+(defclass y-log-xy-box-present   (box-present y-log-xy-box-mixin)   ())
+
+(defmethod draw-point ((obj box-present) x y
                        &key (color *foreground-color*)
                          (point-style :dot)
                          (pen-width 1)
@@ -199,7 +330,7 @@ Example:
                  :pen-width   pen-width
                  :color       color)))
 
-(defmethod draw-text ((obj xy-box-present) x y text
+(defmethod draw-text ((obj box-present) x y text
                       &key (color *foreground-color*)
                         (text-path '(1.0 1.0) text-path-set?)
                         (line-forward *line-forward*)
@@ -225,7 +356,7 @@ Example:
                   :font-name    font-name
                   :line-width   line-width))))
 
-(defmethod draw-rect ((obj xy-box-present) x1 y1 x2 y2
+(defmethod draw-rect ((obj box-present) x1 y1 x2 y2
                       &key (color *foreground-color*)
                         (pen-width *pen-width*)
                         (line-style *line-style*)
@@ -244,7 +375,7 @@ Example:
                 (max u1 u2) (max v1 v2)
                 :fill-color fill-color))))
 
-(defmethod draw-line ((obj xy-box-present) x1 y1 x2 y2
+(defmethod draw-line ((obj box-present) x1 y1 x2 y2
                       &key (color *foreground-color*)
                         (pen-width *pen-width*)
                         (line-style *line-style*)

@@ -100,7 +100,13 @@
    #:*y-max*
    
    #:xy-box-mixin
+   #:x-log-xy-box-mixin
+   #:y-log-xy-box-mixin
+   #:log-log-xy-box-mixin
    #:xy-box-present
+   #:x-log-box-present
+   #:y-log-box-present
+   #:log-log-xy-box-present
    #:with-xy-to-uv
    #:with-uv-to-xy
    #:xy-bounding-box
