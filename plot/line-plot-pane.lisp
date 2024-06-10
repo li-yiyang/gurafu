@@ -18,7 +18,7 @@
   (:documentation
    "Draw a line for `%plot-data'. "))
 
-(def-plot-pane-scale line-plot-pane :normal :log-log)
+(def-plot-pane-scale line-plot-pane :normal :log-log :log-y :log-x)
 
 ;; ========== rescale-plot-pane ==========
 

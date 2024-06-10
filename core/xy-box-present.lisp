@@ -12,6 +12,9 @@
 (defparameter *y-max* 1.0
   "Default x-min value. ")
 
+(defparameter *safe-log-offset* 1e-8
+  "Offset for log when calculate the (log 0). ")
+
 ;; ========== xy-box-mixin ==========
 
 (defclass xy-box-mixin ()
@@ -157,6 +160,11 @@ Return values are `x-min', `x-max', `y-min', `y-max'. "))
 
 ;; ========== x-log-xy-box-mixin ==========
 
+(declaim (inline safe-log))
+(defun safe-log (x)
+  "Save log for x = 0, return 0"
+  (log (max x *safe-log-offset*)))
+
 (defclass x-log-xy-box-mixin (xy-box-mixin) ()
   (:documentation "The x coordinate is transformed in log scale. "))
 
@@ -164,8 +172,8 @@ Return values are `x-min', `x-max', `y-min', `y-max'. "))
   (with-slots (%x-min %x-max %y-min %y-max) stream
     (multiple-value-bind (left right bottom top)
         (stream-box stream)
-      (let ((%x-min (log %x-min))
-            (%x-max (log %x-max)))
+      (let ((%x-min (safe-log %x-min))
+            (%x-max (safe-log %x-max)))
         (setf (slot-value stream '%uv-to-xy-trans)
               (let* ((u-scale (float (/ (- %x-max %x-min) (- right left))))
                      (v-scale (float (/ (- %y-max %y-min) (- bottom top))))
@@ -180,8 +188,8 @@ Return values are `x-min', `x-max', `y-min', `y-max'. "))
   (with-slots (%x-min %x-max %y-min %y-max) stream
     (multiple-value-bind (left right bottom top)
         (stream-box stream)
-      (let ((%x-min (log %x-min))
-            (%x-max (log %x-max)))
+      (let ((%x-min (safe-log %x-min))
+            (%x-max (safe-log %x-max)))
         (setf (slot-value stream '%xy-to-uv-trans)
               (let* ((x-scale (float (/ (- right left) (- %x-max %x-min))))
                      (y-scale (float (/ (- bottom top) (- %y-max %y-min))))
@@ -189,7 +197,7 @@ Return values are `x-min', `x-max', `y-min', `y-max'. "))
                      (v0 (+ bottom (truncate (* y-scale %y-min)))))
                 (declare (integer u0 v0))
                 (lambda (x y)
-                  (values (+ u0 (truncate (* x-scale (log x))))
+                  (values (+ u0 (truncate (* x-scale (safe-log x))))
                           (- v0 (truncate (* y-scale y)))))))))))
 
 ;; ========== y-log-xy-box-mixin ==========
@@ -201,8 +209,8 @@ Return values are `x-min', `x-max', `y-min', `y-max'. "))
   (with-slots (%x-min %x-max %y-min %y-max) stream
     (multiple-value-bind (left right bottom top)
         (stream-box stream)
-      (let ((%y-min (log %y-min))
-            (%y-max (log %y-max)))
+      (let ((%y-min (safe-log %y-min))
+            (%y-max (safe-log %y-max)))
         (setf (slot-value stream '%uv-to-xy-trans)
               (let* ((u-scale (float (/ (- %x-max %x-min) (- right left))))
                      (v-scale (float (/ (- %y-max %y-min) (- bottom top))))
@@ -217,8 +225,8 @@ Return values are `x-min', `x-max', `y-min', `y-max'. "))
   (with-slots (%x-min %x-max %y-min %y-max) stream
     (multiple-value-bind (left right bottom top)
         (stream-box stream)
-      (let ((%y-min (log %y-min))
-            (%y-max (log %y-max)))
+      (let ((%y-min (safe-log %y-min))
+            (%y-max (safe-log %y-max)))
         (setf (slot-value stream '%xy-to-uv-trans)
               (let* ((x-scale (float (/ (- right left) (- %x-max %x-min))))
                      (y-scale (float (/ (- bottom top) (- %y-max %y-min))))
@@ -227,7 +235,7 @@ Return values are `x-min', `x-max', `y-min', `y-max'. "))
                 (declare (integer u0 v0))
                 (lambda (x y)
                   (values (+ u0 (truncate (* x-scale x)))
-                          (- v0 (truncate (* y-scale (log y))))))))))))
+                          (- v0 (truncate (* y-scale (safe-log y))))))))))))
 
 ;; ========== log-log-xy-box-mixin ==========
 
@@ -238,10 +246,10 @@ Return values are `x-min', `x-max', `y-min', `y-max'. "))
   (with-slots (%x-min %x-max %y-min %y-max) stream
     (multiple-value-bind (left right bottom top)
         (stream-box stream)
-      (let ((%x-min (log %x-min))
-            (%x-max (log %x-max))
-            (%y-min (log %y-min))
-            (%y-max (log %y-max)))
+      (let ((%x-min (safe-log %x-min))
+            (%x-max (safe-log %x-max))
+            (%y-min (safe-log %y-min))
+            (%y-max (safe-log %y-max)))
         (setf (slot-value stream '%uv-to-xy-trans)
               (let* ((u-scale (float (/ (- %x-max %x-min) (- right left))))
                      (v-scale (float (/ (- %y-max %y-min) (- bottom top))))
@@ -256,10 +264,10 @@ Return values are `x-min', `x-max', `y-min', `y-max'. "))
   (with-slots (%x-min %x-max %y-min %y-max) stream
     (multiple-value-bind (left right bottom top)
         (stream-box stream)
-      (let ((%x-min (log %x-min))
-            (%x-max (log %x-max))
-            (%y-min (log %y-min))
-            (%y-max (log %y-max)))
+      (let ((%x-min (safe-log %x-min))
+            (%x-max (safe-log %x-max))
+            (%y-min (safe-log %y-min))
+            (%y-max (safe-log %y-max)))
         (setf (slot-value stream '%xy-to-uv-trans)
               (let* ((x-scale (float (/ (- right left) (- %x-max %x-min))))
                      (y-scale (float (/ (- bottom top) (- %y-max %y-min))))
@@ -267,8 +275,8 @@ Return values are `x-min', `x-max', `y-min', `y-max'. "))
                      (v0 (+ bottom (truncate (* y-scale %y-min)))))
                 (declare (integer u0 v0))
                 (lambda (x y)
-                  (values (+ u0 (truncate (* x-scale (log x))))
-                          (- v0 (truncate (* y-scale (log y))))))))))))
+                  (values (+ u0 (truncate (* x-scale (safe-log x))))
+                          (- v0 (truncate (* y-scale (safe-log y))))))))))))
 
 ;; ========== with-xy-to-uv ==========
 

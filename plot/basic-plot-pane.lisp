@@ -33,14 +33,20 @@ Which should be called when add to plot-panes. "))
              (:normal
               (intern (format nil "NORMAL-~@:(~a~)" plot-pane-class)))
              (:log-log
-              (intern (format nil "LOG-LOG-~@:(~a~)" plot-pane-class))))))
+              (intern (format nil "LOG-LOG-~@:(~a~)" plot-pane-class)))
+             (:log-y
+              (intern (format nil "LOG-Y-~@:(~a~)" plot-pane-class)))
+             (:log-x
+              (intern (format nil "LOG-X-~@:(~a~)" plot-pane-class))))))
     (let ((classes (loop for scale in scales
                          collect (list scale (name scale)))))
       `(progn
          ,@(loop for (scale name) in classes
                  for mixin-name = (ecase scale
-                                    (:normal 'xy-box-mixin)
-                                    (:log-log 'log-log-xy-box-mixin))
+                                    (:normal  'xy-box-mixin)
+                                    (:log-log 'log-log-xy-box-mixin)
+                                    (:log-y   'y-log-xy-box-mixin)
+                                    (:log-x   'x-log-xy-box-mixin))
                  collect `(defclass ,name (,plot-pane-class ,mixin-name) ()))
          (defmethod to-scale ((plot ,plot-pane-class) scale)
            (ecase scale

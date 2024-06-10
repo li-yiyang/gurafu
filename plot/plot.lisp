@@ -80,7 +80,9 @@ It add a margin-like feature to the object, providing"))
                 
                 for i upto (1+ %x-ticks)
                 for u = (truncate (* width i))
-                for x = (+ xmin (* xwidth i))
+                for x = (with-uv-to-xy plot
+                            ((x y) ((+ left u) 0))
+                          x)
 
                 do (draw-line plot u (- height %tick-height) u height
                               :color %tick-color)
@@ -94,7 +96,9 @@ It add a margin-like feature to the object, providing"))
 
                 for i upto (1+ %y-ticks)
                 for v = (- (- bottom top) (truncate (* height i)))
-                for y = (+ ymin (* yheight i))
+                for y = (with-uv-to-xy plot
+                            ((x y) (0 (+ top v)))
+                          y)
 
                 do (draw-line plot 0 v %tick-height v
                               :color %tick-color)
@@ -124,6 +128,12 @@ its component of `plot-panes' should be `plot-pane'. "))
 
 (defclass log-log-plot-panes (plot-panes log-log-xy-box-mixin)
   ((%scale :initform :log-log)))
+
+(defclass log-y-plot-panes (plot-panes y-log-xy-box-mixin)
+  ((%scale :initform :log-y)))
+
+(defclass log-x-plot-panes (plot-panes x-log-xy-box-mixin)
+  ((%scale :initform :log-x)))
 
 ;; ========== set-xy-bounding-box ==========
 ;; reset inner `plot-pane' object xy-bounding-box
@@ -169,10 +179,11 @@ its component of `plot-panes' should be `plot-pane'. "))
 
 (defclass plot (base-presentation
                 framed-axes-mixin)
-  ((%plot-panes :initform (make-instance 'normal-plot-panes))
+  ((%scale :initform :normal :initarg :scale)
    (%decorators :initform (make-instance 'stack-layout-presentation))
    (%background-color :initform *background-color*
-                      :initarg :background-color))
+                      :initarg :background-color)
+   %plot-panes)
   (:documentation
    "This is the basic plot holder to show a plot.
 
@@ -217,16 +228,28 @@ To add a data to `plot', use `add-plot-pane' or `add-plot-data':
          (with-slots (%decorators %plot-panes) plot
            (set-stream-bounding-box %decorators left right bottom top)
            (set-stream-bounding-box %plot-panes left right bottom top))))
+  (defmethod initialize-instance :before
+      ((plot plot) &key (scale :normal))
+    (with-slots (%plot-panes) plot
+      (setf %plot-panes
+            (make-instance (ecase scale
+                             (:normal  'normal-plot-panes)
+                             (:log-y   'log-y-plot-panes)
+                             (:log-x   'log-x-plot-panes)
+                             (:log-log 'log-log-plot-panes))))))
+  
   (defmethod initialize-instance :after
       ((plot plot) &key (x-min -1) (x-max 1) (y-min -1) (y-max 1))
-    ;; set xy-bounding-box for `%plot-panes'
-    (set-xy-bounding-box (slot-value plot '%plot-panes)
-                         x-min x-max y-min y-max)
+    (with-slots (%plot-panes %scale) plot
+      
+      
+      ;; set xy-bounding-box for `%plot-panes'
+      (set-xy-bounding-box %plot-panes x-min x-max y-min y-max))
+    
     ;; re-align inner `%plot-panes' and `%decorators'
     (multiple-value-bind (left right bottom top)
         (stream-box plot)
-      (re-align plot left right bottom top)
-      ))
+      (re-align plot left right bottom top)))
   
   (defmethod set-stream-box :after
       ((plot plot) left right bottom top)
@@ -250,6 +273,12 @@ To add a data to `plot', use `add-plot-pane' or `add-plot-data':
 
 (defmethod add-plot-pane ((plot plot) name plot-pane)
   (add-plot-pane (slot-value plot '%plot-panes) name plot-pane))
+
+(defmethod gurafu/core::%uv-to-xy-trans ((plot plot))
+  (gurafu/core::%uv-to-xy-trans (slot-value plot '%plot-panes)))
+
+(defmethod gurafu/core::%xy-to-uv-trans ((plot plot))
+  (gurafu/core::%xy-to-uv-trans (slot-value plot '%plot-panes)))
 
 ;; ========== add-plot-data ==========
 

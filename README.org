@@ -43,7 +43,7 @@ You could just try:
   (in-package :gurafu)
 
   (with-present-to-file
-      (plot plot :margin 10 :x-min -10.0 :x-max 10.0)
+      (plot plot :margin 10 :x-min -10.0 :x-max 10.0 :y-min -1 :y-max 1)
       (out-path :width 400 :height 400)
     (add-plot-data plot
         (line-plot-pane sin :color +yellow+)
@@ -61,6 +61,34 @@ You could see the result as below:
 
 #+RESULTS: first-usable-plot-sin-cos-demo
 [[file:./demo-img/first-usable-plot-sin-cos-demo.png]]
+
+It is possible to draw log log plot like below:
+
+#+name: log-log-plot-demo
+#+header: :var out-path="./demo-img/log-log-plot-demo.png"
+#+begin_src lisp :results file :exports both
+  (in-package :gurafu)
+
+  (with-present-to-file
+      (plot plot :margin 10
+                 :scale :log-log
+                 :x-min 1 :x-max 10
+                 :y-min 1 :y-max 1000)
+      (out-path)
+    (add-plot-data plot
+      (line-plot-pane square :color +大红+)
+      (loop for x from 1 upto 10 by 0.1
+            collect (list x (* x x))))
+    (add-plot-data plot
+      (line-plot-pane cubic :color +鹅黄+)
+      (loop for x from 1 upto 10 by 0.1
+            collect (list x (* x x x)))))
+
+  out-path
+#+end_src
+
+#+RESULTS: log-log-plot-demo
+[[file:./demo-img/log-log-plot-demo.png]]
 
 Also, you may try some more plot pane types:
 + =histogram-pane=:
