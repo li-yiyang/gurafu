@@ -8,12 +8,13 @@
    #:basic-plot-pane
    #:line-plot-pane
    #:histogram-pane
+   #:unified-histogram-pane
    #:2d-grid-pane
    #:2d-histogram-pane
    #:scatter-pane
-   
+
    #:plot
-   
+
    #:rescale-plot-pane
    #:add-plot-pane
    #:add-plot-data

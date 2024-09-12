@@ -43,7 +43,7 @@
    #:+天蓝+
    #:+月白+
    #:+草白+
-   #:+毛青+   
+   #:+毛青+
    #:+大红官绿+
    #:+豆绿+
    #:+油绿+
@@ -76,7 +76,7 @@
    #:*y-min*
    #:*y-max*
    #:set-xy-bounding-box
-   
+
    ;; presentation
    #:with-present-to-file
    #:with-present
@@ -106,12 +106,13 @@
    #:basic-plot-pane
    #:line-plot-pane
    #:histogram-pane
+   #:unified-histogram-pane
    #:2d-grid-pane
    #:2d-histogram-pane
    #:scatter-pane
 
    #:plot
-   
+
    #:rescale-plot-pane
    #:add-plot-pane
    #:add-plot-data
